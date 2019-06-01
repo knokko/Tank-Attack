@@ -1,3 +1,5 @@
+import React from 'react';
+
 export default class Menu {
 
     constructor(app){
@@ -5,6 +7,6 @@ export default class Menu {
     }
 
     render(){
-        // TODO render something
+        return <div>Well done, you connected!</div>;
     }
 }

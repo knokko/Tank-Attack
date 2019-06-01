@@ -41,7 +41,14 @@ export default class Unconnected extends Component {
     render(){
         return (<div className="Unconnected">
             <div className="Unconnected-Main-Box">
-                <button className="Unconnected-Main-Box-Connect">Connect!</button>
+                <button 
+                className="Unconnected-Main-Box-Connect"
+                onClick={_ => {
+                    if (!this.state.showAdvanced){
+                        this.props.gameState.connect();
+                    }
+                }}
+                >Connect!</button>
                 {this.state.showAdvanced ? this.renderShowAdvancedMain() : this.renderHiddenAdvanced()}
             </div>
             {this.state.showAdvanced && this.renderShowAdvanced()}

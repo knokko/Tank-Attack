@@ -1,0 +1,28 @@
+The login protocol is started by the client.
+
+The client to server message contains:
+CODE_LOGIN (int8)
+The account id to log in with (var_u64)
+The password (a sequence of uint8's of length PASSWORD_LENGTH)
+
+CODE_LOGIN = 1
+PASSWORD_LENGTH = 64
+
+The server response code will be one of the following:
+-SUCCESS if the login was succesful
+-ALREADY_LOGGED_IN if the account with the given account id is already logged in
+-WRONG_PASSWORD if the password sent by the client is not correct
+-NO_ACCOUNT if there is no account with the given account id
+
+The server response will contain:
+true (boolean) because this is a response
+the response code as sized uint with size LOGIN_CODE_BITS
+
+The server will terminate the connection instead if the client was already in the logged in state when it received the request.
+
+SUCCESS = 0
+ALREADY_LOGGED_IN = 1
+NO_ACCOUNT = 2
+WRONG_PASSWORD = 3
+
+LOGIN_CODE_BITS = 2

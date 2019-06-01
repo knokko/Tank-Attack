@@ -29,7 +29,7 @@ impl ConnectionManager {
         });
 
         println!("Opening web socket server");
-        let listen_result = server.listen("127.0.0.1:25565");
+        let listen_result = server.listen("127.0.0.1:48562");
         match listen_result {
             Ok(_) => println!("Closed web socket server gracefully"),
             Err(error) => println!("Web socket server crashed because: {}", error)

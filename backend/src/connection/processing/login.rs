@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 pub fn process_login(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
     if !state.is_logged_in() {
-        let account_id = input.read_u32()?;
+        let account_id = input.read_var_u64()? as u32;
         let password = input.read_u8s(PASSWORD_LENGTH)?;
         let mut account_manager = app.account_manager.lock().unwrap();
         let maybe_account = account_manager.get_mut_account(account_id);

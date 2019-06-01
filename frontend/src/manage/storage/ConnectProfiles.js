@@ -1,7 +1,7 @@
 const KEY_AMOUNT = "ConnectProfileAmount";
 const KEY_BASE = "ConnectProfile";
 const KEY_SELECTED = "ConnectProfileSelected";
-const ADDRESS = "ws://localhost:3000";
+const ADDRESS = "ws://localhost:48562";
 
 export const PASSWORD_LENGTH = 64;
 
@@ -16,7 +16,14 @@ class ManagerClass {
         const length = this.profiles.length;
         localStorage.setItem(KEY_AMOUNT, length);
         for (let index = 0; index < length; index++) {
-            localStorage.setItem(KEY_BASE + index, JSON.stringify(this.profiles[index]));
+            const profile = this.profiles[index];
+            const json = {
+                name: profile.name,
+                address: profile.address,
+                id: profile.id,
+                password: profile.password
+            };
+            localStorage.setItem(KEY_BASE + index, JSON.stringify(json));
         }
         localStorage.setItem(KEY_SELECTED, this.selected);
     }
@@ -26,7 +33,8 @@ class ManagerClass {
         if (connectProfileAmount){
             this.profiles = new Array(connectProfileAmount);
             for (let index = 0; index < connectProfileAmount; index++){
-                this.profiles[index] = JSON.parse(localStorage.getItem(KEY_BASE + index));
+                const json = JSON.parse(localStorage.getItem(KEY_BASE + index));
+                this.profiles[index] = new ConnectProfile(json.name, json.address, json.id, json.password);
             }
             this.selected = parseInt(localStorage.getItem(KEY_SELECTED));
         } else {

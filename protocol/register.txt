@@ -1,0 +1,22 @@
+The client can send a register request, it must contain only CODE_REGISTER as int8
+
+If the account was created successfully, the server response will contain:
+true (boolean)
+SUCCESS (sized uint of size CODE_BITS)
+The id of the new account (as var uint)
+The password of the new account (as uint8 sequence of length PASSWORD_LENGTH)
+
+If the account was not created successfully, the server response will contain:
+true (boolean)
+the error code (sized uint of size CODE_BITS)
+
+The error code must be MAX_ACCOUNTS_REACHED or RANDOM_ERROR
+
+If the client was already logged in, the server will terminate the connection instead
+
+SUCCESS = 0
+MAX_ACCOUNTS_REACHED = 1
+RANDOM_ERROR = 2
+
+CODE_BITS = 2
+PASSWORD_LENGTH = 64

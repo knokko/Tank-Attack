@@ -16,13 +16,14 @@ pub fn process_register(state: &mut ConnectionState, app: Arc<ServerApp>, socket
                 register::send_success(socket, account)?;
             } else {
                 let random_error = account_result.unwrap_err();
-                return Err(dynamic_error(format!("Secure random failure: {}", random_error)));
+                println!("Secure random failure: {}", random_error);
+                register::send_random_error(socket)?;
             }
         } else {
             register::send_max_accounts_reached(socket)?;
         }
+        Ok(())
     } else {
         return Err(static_error("Attempted creation of account while logged in"));
     }
-    Ok(())
 }

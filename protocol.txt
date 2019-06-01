@@ -1,11 +1,11 @@
 The frontend will open a websocket connection when it wants to log in or register.
 When this happens, it will send the corresponding message as soon as the connection opens.
 
-For client to server messages:
+For Client to Server messages (cts):
 The first byte denotes the message type (for instance LOGIN, REGISTER or IMAGE)
 The rest of the message depends entirely on the message type and payload
 
-For server to client messages:
+For Server to Client messages (stc):
 The first boolean denotes whether the message is a response or a server initiative.
 -If it is true, the server is responding to a message sent by the client. This message responds to the earliest message sent
 by the client that was not yet responded to. Then there is no additional header, but the payload comes immediathly after the true.

@@ -15,16 +15,18 @@ export default class Unconnected {
     connect(){
         this.isConnecting = true;
         const selectedProfile = ConnectProfileManager.profiles[ConnectProfileManager.selected];
-        ConnectionManager.connect(selectedProfile.address, _ => {
-            this.app.setGameState(new StateMenu(this.app));
+        const self = this;
+        ConnectionManager.connect(selectedProfile, _ => {
+            self.app.setGameState(new StateMenu(this.app));
         }, _ => {
-            this.app.setGameState(this);
+            this.isConnecting = false;
+            self.app.setGameState(this);
         });
     }
 
     render(){
         if (!this.isConnecting){
-            return <Menu />;
+            return <Menu gameState={this} />;
         } else {
             return <ConnectingMenu />;
         }
