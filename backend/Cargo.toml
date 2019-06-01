@@ -1,0 +1,11 @@
+[package]
+name = "tank-attack"
+version = "0.1.0"
+authors = ["knokko <knokogator@hotmail.com>"]
+edition = "2018"
+
+[dependencies]
+ws = "*"
+ring = "*"
+bit_helper = {git = "https://github.com/knokko/Rust-Bit-Helper"}
+threadpool = "1.0"

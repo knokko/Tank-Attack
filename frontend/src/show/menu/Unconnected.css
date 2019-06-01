@@ -1,0 +1,78 @@
+.Unconnected {
+    background-color: rgb(30,50,150);
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+}
+
+.Unconnected-Main-Box {
+    background-color: rgb(100,100,130);
+    position: absolute;
+    width: 20vw;
+    left: 80vw;
+    height: 100vh;
+}
+
+.Unconnected-Main-Box-Connect {
+    background-color: rgb(100,100,200);
+    position: absolute;
+    bottom: 75vh;
+    font-size: 2vw;
+}
+
+.Unconnected-Advanced-Box-Shown {
+    background-color: rgb(139, 59, 83);
+    position: absolute;
+    left: 60vw;
+    width: 20vw;
+    top: 70vh;
+    height: 30vh;
+}
+
+.Unconnected-Advanced-Box-List {
+    background-color: rgb(131, 12, 48);
+    position: absolute;
+    left: 50vw;
+    width: 10vw;
+    top: 70vh;
+    height: 25vh;
+}
+
+.Unconnected-Advanced-Box-List hover {
+    background-color: rgb(170, 17, 63);
+}
+
+.Unconnected-Advanced-Box-Create-Container {
+    background-color: rgb(140, 17, 56);
+    position: absolute;
+    left: 50vw;
+    width: 10vw;
+    top: 95vh;
+    height: 5vh;
+}
+
+.Unconnected-Advanced-Box-Create {
+    background-color: rgb(50,200,50);
+}
+
+.Unconnected-Advanced-Box-Init {
+    background-color: rgb(150,150,50);
+}
+
+.Unconnected-Main-Box-Advanced {
+    background-color: rgb(150,150,175);
+    position: absolute;
+    top: 70vh;
+}
+
+.Unconnected-Advanced-Cancel {
+    background-color: rgb(100,100,200);
+    position: absolute;
+    top: 70vh;
+}
+
+.Unconnected-Advanced-Save {
+    background-color: rgb(200, 122, 50);
+    position: absolute;
+    top: 80vh;
+}
