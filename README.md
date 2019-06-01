@@ -6,4 +6,5 @@ To get started, first clone this repository. Then open a terminal in the fronten
 The previous step should only be necessary the first time and after a dependency needs an update.
 
 To start the frontend, open a terminal in the frontend folder and run 'npm start'.
+
 To start the backend, open a terminal in the backend folder and run 'cargo run'.
