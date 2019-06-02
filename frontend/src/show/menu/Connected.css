@@ -1,0 +1,51 @@
+.Connected {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgb(200,50,50);
+}
+
+.Connected-Top-Bar {
+    width: 100vw;
+    height: 15vh;
+    background-color: rgb(20,40,40);
+}
+
+.Connected-Top-Button {
+    position: relative;
+    top: 2.5vh;
+    height: 10vh;
+    background-color: rgb(200,200,200);
+    font-size: 7vh;
+    color: black;
+    border-left: 0.5vw;
+    border-right: 0.5vw;
+    border-bottom: 0.5vh;
+    border-top: 0.5vh;
+    border-style: solid;
+    border-color: rgb(30,160,60);
+    margin-left: 1.0vw;
+    margin-right: 1.0vw;
+}
+
+.Connected-Right-Bar {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 15vw;
+    height: 100vh;
+    background-color: rgb(20,40,40);
+}
+
+.Connected-Disconnect-Button {
+    position: absolute;
+    left: 1.5vw;
+    bottom: 15vh;
+    width: 8vw;
+    height: 6vh;
+    background-color: rgb(200,200,200);
+    font-size: 3vh;
+    color: black;
+}

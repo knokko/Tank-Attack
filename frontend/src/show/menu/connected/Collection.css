@@ -1,0 +1,47 @@
+.Collection {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgb(50, 127, 150);
+}
+
+.Collection-Upper-Bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 15vh;
+    background-color: rgb(187, 133, 16);
+}
+
+.Collection-Upper-Button {
+    position: relative;
+    top: 2.5vh;
+    height: 10vh;
+    font-size: 5vh;
+    background-color: rgb(243, 203, 116);
+    color: white;
+    margin-left: 0.5vw;
+    margin-right: 0.5vw;
+}
+
+.Collection-Back-Button {
+    position: absolute;
+    right: 2vw;
+    top: 3.0vh;
+    height: 9vh;
+    font-size: 4vh;
+    background-color: rgb(150,150,150);
+    color: black;
+}
+
+.Collection-Body {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 85vh;
+    background-color: rgb(243, 203, 116);
+}

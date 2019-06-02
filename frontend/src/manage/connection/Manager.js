@@ -82,12 +82,14 @@ class Manager {
                     }, 0).terminate();
                 }
             };
-            this.socket.onclose = _ => {
+            this.socket.onclose = event => {
                 self.state = NOT_CONNECTED;
+                if (event.reason){
+                    window.alert('Disconnected from server: ' + event.reason);
+                } else {
+                    window.alert('Disconnected from server');
+                }
                 onClose();
-            };
-            this.socket.onerror = event => {
-                alert(event.target);
             };
             this.socket.onmessage = event => {
                 const fileReader = new FileReader();
@@ -118,6 +120,10 @@ class Manager {
             this.waitingCallbacks.push(callback);
         }
         return output;
+    }
+
+    disconnect(){
+        this.socket.close(1000);
     }
 }
 
