@@ -32,6 +32,7 @@ pub fn process_image(state: &mut ConnectionState, input: &mut BitInput, app: Arc
 fn process_image_upload(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
     if state.is_logged_in() {
         let account_id = state.get_account_id();
+        let private = input.read_bool()?;
         let maybe_name = input.read_string(10000)?;
         if maybe_name.is_some() {
             let name = maybe_name.unwrap();
@@ -42,9 +43,11 @@ fn process_image_upload(state: &mut ConnectionState, input: &mut BitInput, app: 
                     let height = 1 + (input.read_u8()? as usize);
                     let pixel_data = input.read_u8s(4 * width * height)?;
                     let data = ImageData::from_data(pixel_data, width, height);
-                    let maybe_image_id = image_manager.add_image(name, account_id, data);
+                    let maybe_image_id = image_manager.add_image(private, name, account_id, data);
                     if maybe_image_id.is_ok(){
-                        image::upload::send_success(socket, maybe_image_id.unwrap())?;
+                        let image_id = maybe_image_id.unwrap();
+                        let created_at = image_manager.get_image(image_id).unwrap().get_created_at();
+                        image::upload::send_success(socket, image_id, created_at)?;
                         Ok(())
                     } else {
                         image::upload::send_fail(socket, stc::image::upload::IO_ERROR)?;

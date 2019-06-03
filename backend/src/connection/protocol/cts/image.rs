@@ -8,3 +8,5 @@ pub const GET: i8 = 2;
 pub const COPY: i8 = 3;
 /// Get all image ids of the images that someone (probably you) owns
 pub const IDS: i8 = 4;
+/// The number of bits required to store the image code
+pub const CODE_BITS: usize = 3;

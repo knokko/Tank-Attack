@@ -7,11 +7,12 @@ pub mod upload {
 
     use bit_helper::output::{BitOutput, U8VecBitOutput};
 
-    pub fn send_success(socket: Arc<ws::Sender>, image_id: ImageID) -> Result<(),ws::Error> {
+    pub fn send_success(socket: Arc<ws::Sender>, image_id: ImageID, created_at: u64) -> Result<(),ws::Error> {
         let mut output = U8VecBitOutput::with_capacity(6);
         output.add_bool(true);
         output.add_sized_u64(upload::SUCCESS as u64, upload::CODE_BITS);
         output.add_var_u64(image_id as u64);
+        output.add_var_u64(created_at);
         send(socket, output.vector)
     }
 

@@ -85,12 +85,12 @@ impl ImageManager {
     }
 
     /// Always call can_add_image before calling this method to make sure more images can be added
-    pub fn add_image(&mut self, name: String, owner_id: AccountID, data: ImageData) -> Result<ImageID,std::io::Error> {
+    pub fn add_image(&mut self, private: bool, name: String, owner_id: AccountID, data: ImageData) -> Result<ImageID,std::io::Error> {
         if !self.can_add_image() {
             panic!("Exceeded image limit");
         }
         let id = self.images.len() as u32;
-        let mut image = Image::new(id, owner_id, name);
+        let mut image = Image::new(id, owner_id, private, name);
         image.set_data(data)?;
         self.images.push(image);
         Ok(id)

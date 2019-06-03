@@ -1,0 +1,27 @@
+The client can request to upload an image. The message must contain the following:
+CODE_IMAGE (as int8)
+UPLOAD (as sized uint of size IMAGE_CODE_BITS)
+Whether or not the image is private (boolean)
+The name of the image (as string, null is not allowed)
+The width of the image - 1 (as uint8)
+The height of the image - 1 (as uint8)
+The pixel data in rgba format (as uint8 sequence of size width * height * 4)
+
+If the upload was successful, the server will send the following response:
+true (as boolean)
+SUCCESS (as sized uint of size UPLOAD_CODE_BITS)
+The id of the new image (as var uint)
+The createdAt time of the image (as var uint)
+
+If the upload was not successful, the server will send the following response:
+true (as boolean)
+IO_ERROR or LONG_NAME or MANY_TOTAL or MANY_YOU (1 of them as sized uint of size UPLOAD_CODE_BITS)
+
+SUCCESS = 0
+IO_ERROR = 1
+LONG_NAME = 2
+MANY_TOTAL = 3
+MANY_YOU = 4
+
+IMAGE_CODE_BITS = 3
+UPLOAD_CODE_BITS = 3

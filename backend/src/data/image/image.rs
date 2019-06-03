@@ -3,6 +3,7 @@ extern crate bit_helper;
 use std::path::Path;
 use std::io::{Read,Write,Error};
 use std::fs::File;
+use std::time::SystemTime;
 
 use crate::data::image::imagedata::ImageData;
 use crate::data::account::account::AccountID;
@@ -19,15 +20,24 @@ pub struct Image {
     id: ImageID,
     owner_id: AccountID,
 
+    private: bool,
+
+    created_at: u64,
+    last_modified: u64,
+
     name: Box<String>
 }
 
 impl Image {
 
-    pub fn new(image_id: ImageID, owner_id: AccountID, name: String) -> Image {
+    pub fn new(image_id: ImageID, owner_id: AccountID, private: bool, name: String) -> Image {
+        let time = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis() as u64;
         Image {
             id: image_id,
             owner_id: owner_id,
+            created_at: time,
+            last_modified: time,
+            private: private,
             name: Box::new(name)
         }
     }
@@ -35,7 +45,10 @@ impl Image {
     pub fn load(image_id: ImageID, input: &mut BitInput) -> Result<Image,BitInputError> {
         Ok(Image {
             id: image_id,
-            owner_id: input.read_u32()?,
+            owner_id: input.read_var_u64()? as u32,
+            private: input.read_bool()?,
+            created_at: input.read_var_u64()?,
+            last_modified: input.read_var_u64()?,
             name: Box::new(input.read_string(MAX_IMAGE_NAME_LENGTH)?.unwrap())
         })
     }
@@ -75,7 +88,10 @@ impl Image {
     }
 
     pub fn save(&self, output: &mut BitOutput){
-        output.add_u32(self.owner_id);
+        output.add_var_u64(self.owner_id as u64);
+        output.add_bool(self.private);
+        output.add_var_u64(self.created_at);
+        output.add_var_u64(self.last_modified);
         output.add_string(Some(self.name.as_ref()));
     }
 
@@ -87,11 +103,19 @@ impl Image {
         self.owner_id
     }
 
+    pub fn get_created_at(&self) -> u64 {
+        self.created_at
+    }
+
+    pub fn get_last_modified(&self) -> u64 {
+        self.last_modified
+    }
+
     pub fn can_edit(&self, account_id: AccountID) -> bool {
         self.owner_id == account_id
     }
 
     pub fn can_read(&self, account_id: AccountID) -> bool {
-        true
+        !self.private || self.owner_id == account_id
     }
 }
