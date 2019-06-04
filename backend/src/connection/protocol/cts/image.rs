@@ -1,12 +1,19 @@
+pub type CodeType = u64;
+
 /// Upload a new image
-pub const UPLOAD: i8 = 0;
-/// Change an existing image
-pub const CHANGE: i8 = 1;
-/// Get image data of an existing image
-pub const GET: i8 = 2;
+pub const UPLOAD: CodeType = 0;
+/// Change pixel data of an existing image
+pub const CHANGE_PIXELS: CodeType = 1;
+/// Get image pixel data of an existing image
+pub const GET_PIXELS: CodeType = 2;
+/// Change the metadata (the name or the private status) of an existing image
+pub const CHANGE_META: CodeType = 3;
+/// Get the metadata of an existing image
+pub const GET_META: CodeType = 4;
 /// Copy an image (possibly of someone else) and add it to your account
-pub const COPY: i8 = 3;
+pub const COPY: CodeType = 5;
 /// Get all image ids of the images that someone (probably you) owns
-pub const IDS: i8 = 4;
+pub const IDS: CodeType = 6;
+
 /// The number of bits required to store the image code
 pub const CODE_BITS: usize = 3;

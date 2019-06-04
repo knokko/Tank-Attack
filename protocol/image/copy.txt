@@ -1,0 +1,30 @@
+The client can request to copy an image to its own account, the request must contain:
+CTS_CODE_IMAGE (as sized uint of size CTS_CODE_BITS)
+IMAGE_COPY (as sized uint of size IMAGE_CODE_BITS)
+The id of the source image (as var uint)
+The private status of the destination image (as boolean)
+The name of the destination image (as string)
+
+If the copy was successful, the server will send the following response:
+true (as boolean)
+SUCCESS (as sized uint of size COPY_CODE_BITS)
+The id of the destination image (as var uint)
+The createdAt of the destination image (number of milliseconds between exact moment of creation and Epoch, as var uint)
+
+If the copy failed, the server will send the following response:
+true (as boolean)
+IO_ERROR_READ or IO_ERROR_WRITE or UNAUTHORIZED or NO_IMAGE or MANY_TOTAL or MANY_YOU (as sized uint of size COPY_CODE_BITS)
+
+CTS_CODE_BITS = 2
+CTS_CODE_IMAGE = 2
+IMAGE_CODE_BITS = 3
+IMAGE_COPY = 5
+
+COPY_CODE_BITS = 3
+SUCCESS = 0
+IO_ERROR_READ = 1
+IO_ERROR_WRITE = 2
+UNAUTHORIZED = 3
+NO_IMAGE = 4
+MANY_TOTAL = 5
+MANY_YOU = 6

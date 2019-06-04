@@ -1,50 +1,85 @@
+pub type CodeType = u64;
+
 pub mod upload {
 
-    pub const SUCCESS: u8 = 0;
-    pub const IO_ERROR: u8 = 1;
-    pub const LONG_NAME: u8 = 2;
-    pub const MANY_TOTAL: u8 = 3;
-    pub const MANY_YOU: u8 = 4;
+    pub use super::CodeType;
+
+    pub const SUCCESS: CodeType = 0;
+    pub const IO_ERROR: CodeType = 1;
+    pub const LONG_NAME: CodeType = 2;
+    pub const MANY_TOTAL: CodeType = 3;
+    pub const MANY_YOU: CodeType = 4;
 
     pub const CODE_BITS: usize = 3;
 }
 
-pub mod change {
+pub mod change_pixels {
 
-    pub const SUCCESS: u8 = 0;
-    pub const IO_ERROR: u8 = 1;
-    pub const UNAUTHORIZED: u8 = 2;
-    pub const NO_IMAGE: u8 = 3;
+    pub use super::CodeType;
+
+    pub const SUCCESS: CodeType = 0;
+    pub const IO_ERROR: CodeType = 1;
+    pub const UNAUTHORIZED: CodeType = 2;
+    pub const NO_IMAGE: CodeType = 3;
 
     pub const CODE_BITS: usize = 2;
 }
 
-pub mod get {
+pub mod get_pixels {
 
-    pub const SUCCESS: u8 = 0;
-    pub const IO_ERROR: u8 = 1;
-    pub const UNAUTHORIZED: u8 = 2;
-    pub const NO_IMAGE: u8 = 3;
+    pub use super::CodeType;
+
+    pub const SUCCESS: CodeType = 0;
+    pub const IO_ERROR: CodeType = 1;
+    pub const UNAUTHORIZED: CodeType = 2;
+    pub const NO_IMAGE: CodeType = 3;
+
+    pub const CODE_BITS: usize = 2;
+}
+
+pub mod change_meta {
+
+    pub use super::CodeType;
+
+    pub const SUCCESS: CodeType = 0;
+    pub const UNAUTHORIZED: CodeType = 1;
+    pub const NO_IMAGE: CodeType = 2;
+
+    pub const CODE_BITS: usize = 2;
+}
+
+pub mod get_meta {
+
+    pub use super::CodeType;
+
+    pub const SUCCESS: CodeType = 0;
+    pub const UNAUTHORIZED: CodeType = 1;
+    pub const NO_IMAGE: CodeType = 2;
 
     pub const CODE_BITS: usize = 2;
 }
 
 pub mod copy {
 
-    pub const SUCCESS: u8 = 0;
-    pub const IO_ERROR_READ: u8 = 1;
-    pub const IO_ERROR_WRITE: u8 = 2;
-    pub const UNAUTHORIZED: u8 = 3;
-    pub const NO_IMAGE: u8 = 4;
-    pub const MANY_TOTAL: u8 = 5;
+    pub use super::CodeType;
+
+    pub const SUCCESS: CodeType = 0;
+    pub const IO_ERROR_READ: CodeType = 1;
+    pub const IO_ERROR_WRITE: CodeType = 2;
+    pub const UNAUTHORIZED: CodeType = 3;
+    pub const NO_IMAGE: CodeType = 4;
+    pub const MANY_TOTAL: CodeType = 5;
+    pub const MANY_YOU: CodeType = 6;
 
     pub const CODE_BITS: usize = 3;
 }
 
 pub mod ids {
 
-    pub const SUCCESS: u8 = 0;
-    pub const NO_ACCOUNT: u8 = 1;
+    pub use super::CodeType;
+
+    pub const SUCCESS: CodeType = 0;
+    pub const NO_ACCOUNT: CodeType = 1;
 
     pub const CODE_BITS: usize = 1;
 }

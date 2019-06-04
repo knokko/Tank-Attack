@@ -27,6 +27,11 @@ fn main() {
         test_counter: Mutex::new(0)
     });
 
+    {
+        let mut image_manager = application.image_manager.lock().unwrap();
+        image_manager.set_app_instance(Arc::clone(&application));
+    }
+
     input::input_handler::start(Arc::clone(&application));
 
     // This will block until the application should shut down

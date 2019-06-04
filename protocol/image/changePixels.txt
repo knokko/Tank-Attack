@@ -1,0 +1,36 @@
+The client can request to change the pixel data and/or size of an image. It must contain:
+CODE_IMAGE (as sized uint of size CTS_CODE_BITS)
+CHANGE_PIXELS (as sized uint of size IMAGE_CODE_BITS)
+The id of the image to change (as var uint)
+The new width - 1 (as uint8)
+The new height - 1 (as uint8)
+The new pixel data (as uint8 sequence of size 4 * width * height)
+
+The server will send the following response:
+true (as boolean)
+SUCCESS or IO_ERROR or UNAUTHORIZED or NO_IMAGE (as sized uint of size IMAGE_CHANGE_CODE_BITS)
+
+Additionally, the server will broadcast the following message to all currently connected clients:
+false (as boolean)
+STC_CODE_IMAGE (as sized uint of size STC_CODE_BITS)
+STC_IMAGE_CHANGE (as sized uint of size STC_IMAGE_CODE_BITS)
+The image id (as var uint)
+
+All currently connected clients that are interested in the received image id, can send a getPixels message to
+the server to ask for the new pixel data.
+
+CTS_CODE_BITS = 2
+CODE_IMAGE = 2
+IMAGE_CODE_BITS = 3
+CHANGE_PIXELS = 1
+
+IMAGE_CHANGE_CODE_BITS = 2
+SUCCESS = 0
+IO_ERROR = 1
+UNAUTHORIZED = 2
+NO_IMAGE = 3
+
+STC_CODE_BITS = 1
+STC_CODE_IMAGE = 0
+STC_IMAGE_CODE_BITS = 1
+STC_IMAGE_CHANGE = 0

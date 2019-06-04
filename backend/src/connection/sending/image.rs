@@ -16,7 +16,7 @@ pub mod upload {
         send(socket, output.vector)
     }
 
-    pub fn send_fail(socket: Arc<ws::Sender>, error_code: u8) -> Result<(),ws::Error> {
+    pub fn send_fail(socket: Arc<ws::Sender>, error_code: upload::CodeType) -> Result<(),ws::Error> {
         let mut output = U8VecBitOutput::with_capacity(1);
         output.add_bool(true);
         output.add_sized_u64(error_code as u64, upload::CODE_BITS);
@@ -24,34 +24,34 @@ pub mod upload {
     }
 }
 
-pub mod change {
+pub mod change_pixels {
 
     use std::sync::Arc;
     use crate::connection::sending::send;
-    use crate::connection::protocol::stc::image::change;
+    use crate::connection::protocol::stc::image::change_pixels;
 
     use bit_helper::output::{BitOutput,U8VecBitOutput};
 
     pub fn send_success(socket: Arc<ws::Sender>) -> Result<(),ws::Error> {
         let mut output = U8VecBitOutput::with_capacity(1);
         output.add_bool(true);
-        output.add_sized_u64(change::SUCCESS as u64, change::CODE_BITS);
+        output.add_sized_u64(change_pixels::SUCCESS as u64, change_pixels::CODE_BITS);
         send(socket, output.vector)
     }
 
-    pub fn send_fail(socket: Arc<ws::Sender>, error_code: u8) -> Result<(),ws::Error> {
+    pub fn send_fail(socket: Arc<ws::Sender>, error_code: change_pixels::CodeType) -> Result<(),ws::Error> {
         let mut output = U8VecBitOutput::with_capacity(1);
         output.add_bool(true);
-        output.add_sized_u64(error_code as u64, change::CODE_BITS);
+        output.add_sized_u64(error_code as u64, change_pixels::CODE_BITS);
         send(socket, output.vector)
     }
 }
 
-pub mod get {
+pub mod get_pixels {
 
     use std::sync::Arc;
     use crate::connection::sending::send;
-    use crate::connection::protocol::stc::image::get;
+    use crate::connection::protocol::stc::image::get_pixels;
     use crate::data::image::imagedata::ImageData;
 
     use bit_helper::output::{BitOutput,U8VecBitOutput};
@@ -59,18 +59,65 @@ pub mod get {
     pub fn send_success(socket: Arc<ws::Sender>, pixels: ImageData) -> Result<(),ws::Error> {
         let mut output = U8VecBitOutput::with_capacity(1 + 4 * pixels.get_width() * pixels.get_height());
         output.add_bool(true);
-        output.add_sized_u64(get::SUCCESS as u64, get::CODE_BITS);
-
-        // Make sure we can write full bytes once we reach pixels.to_bits
-        output.add_bools_from_vec(&vec![false; 7 - get::CODE_BITS]);
+        output.add_sized_u64(get_pixels::SUCCESS as u64, get_pixels::CODE_BITS);
         pixels.to_bits(&mut output);
         send(socket, output.vector)
     }
 
-    pub fn send_fail(socket: Arc<ws::Sender>, error_code: u8) -> Result<(),ws::Error> {
+    pub fn send_fail(socket: Arc<ws::Sender>, error_code: get_pixels::CodeType) -> Result<(),ws::Error> {
         let mut output = U8VecBitOutput::with_capacity(1);
         output.add_bool(true);
-        output.add_sized_u64(error_code as u64, get::CODE_BITS);
+        output.add_sized_u64(error_code as u64, get_pixels::CODE_BITS);
+        send(socket, output.vector)
+    }
+}
+
+pub mod change_meta {
+
+    use std::sync::Arc;
+    use crate::connection::sending::send;
+    use crate::connection::protocol::stc::image::change_meta;
+
+    use bit_helper::output::{BitOutput,U8VecBitOutput};
+
+    pub fn send_success(socket: Arc<ws::Sender>) -> Result<(),ws::Error> {
+        let mut output = U8VecBitOutput::with_capacity(1);
+        output.add_bool(true);
+        output.add_sized_u64(change_meta::SUCCESS as u64, change_meta::CODE_BITS);
+        send(socket, output.vector)
+    }
+
+    pub fn send_fail(socket: Arc<ws::Sender>, error_code: change_meta::CodeType) -> Result<(),ws::Error> {
+        let mut output = U8VecBitOutput::with_capacity(1);
+        output.add_bool(true);
+        output.add_sized_u64(error_code as u64, change_meta::CODE_BITS);
+        send(socket, output.vector)
+    }
+}
+
+pub mod get_meta {
+
+    use std::sync::Arc;
+    use crate::connection::sending::send;
+    use crate::connection::protocol::stc::image::get_meta;
+
+    use bit_helper::output::{BitOutput,U8VecBitOutput};
+
+    pub fn send_success(socket: Arc<ws::Sender>, private: bool, name: &String, created_at: u64, last_modified: u64) -> Result<(),ws::Error> {
+        let mut output = U8VecBitOutput::with_capacity(30);
+        output.add_bool(true);
+        output.add_sized_u64(get_meta::SUCCESS as u64, get_meta::CODE_BITS);
+        output.add_bool(private);
+        output.add_string(Some(name));
+        output.add_var_u64(created_at);
+        output.add_var_u64(last_modified);
+        send(socket, output.vector)
+    }
+
+    pub fn send_fail(socket: Arc<ws::Sender>, error_code: get_meta::CodeType) -> Result<(),ws::Error> {
+        let mut output = U8VecBitOutput::with_capacity(1);
+        output.add_bool(true);
+        output.add_sized_u64(error_code as u64, get_meta::CODE_BITS);
         send(socket, output.vector)
     }
 }
@@ -83,15 +130,16 @@ pub mod copy {
     use crate::data::image::image::ImageID;
     use bit_helper::output::{BitOutput,U8VecBitOutput};
 
-    pub fn send_success(socket: Arc<ws::Sender>, id: ImageID) -> Result<(),ws::Error> {
+    pub fn send_success(socket: Arc<ws::Sender>, id: ImageID, created_at: u64) -> Result<(),ws::Error> {
         let mut output = U8VecBitOutput::with_capacity(4);
         output.add_bool(true);
         output.add_sized_u64(copy::SUCCESS as u64, copy::CODE_BITS);
         output.add_var_u64(id as u64);
+        output.add_var_u64(created_at);
         send(socket, output.vector)
     }
 
-    pub fn send_fail(socket: Arc<ws::Sender>, error_code: u8) -> Result<(),ws::Error> {
+    pub fn send_fail(socket: Arc<ws::Sender>, error_code: copy::CodeType) -> Result<(),ws::Error> {
         let mut output = U8VecBitOutput::with_capacity(1);
         output.add_bool(true);
         output.add_sized_u64(error_code as u64, copy::CODE_BITS);

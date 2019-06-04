@@ -1,0 +1,26 @@
+The client can request the server to send the metadata of an image, the request must contain:
+CTS_CODE_IMAGE (as sized uint of size CTS_CODE_BITS)
+IMAGE_GET_META (as sized uint of size IMAGE_CODE_BITS)
+The image id (as var uint)
+
+If the request was successful, the server will send the following response:
+true (as boolean)
+SUCCESS (as sized uint of size GET_META_CODE_BITS)
+The private status of the image (as boolean)
+The name of the image (as string)
+The createdAt of the image (the number of milliseconds that passed between that time and the Epoch, as var uint)
+The lastModified of the image (same encoding as createdAt)
+
+If the request was not successful, the server will send the following response:
+true (as boolean)
+UNAUTHORIZED or NO_IMAGE (as sized uint of size GET_META_CODE_BITS)
+
+CTS_CODE_BITS = 2
+CTS_CODE_IMAGE = 2
+IMAGE_CODE_BITS = 3
+IMAGE_GET_META = 4
+
+GET_META_CODE_BITS = 2
+SUCCESS = 0
+UNAUTHORIZED = 1
+NO_IMAGE = 2

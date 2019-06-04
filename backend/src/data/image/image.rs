@@ -28,15 +28,18 @@ pub struct Image {
     name: Box<String>
 }
 
+fn current_time() -> u64 {
+    SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis() as u64
+}
+
 impl Image {
 
     pub fn new(image_id: ImageID, owner_id: AccountID, private: bool, name: String) -> Image {
-        let time = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis() as u64;
         Image {
             id: image_id,
             owner_id: owner_id,
-            created_at: time,
-            last_modified: time,
+            created_at: 0,
+            last_modified: 0,
             private: private,
             name: Box::new(name)
         }
@@ -83,8 +86,28 @@ impl Image {
         let mut file = File::create(path)?;
         file.write_all(&[(data.get_width() - 1) as u8, data.get_height() as u8])?;
         file.write_all(data.get_pixel_data())?;
-
+        let current_time = current_time();
+        self.last_modified = current_time;
+        if self.created_at == 0 {
+            self.created_at = current_time;
+        }
         Ok(())
+    }
+
+    pub fn get_private(&self) -> bool {
+        self.private
+    }
+
+    pub fn get_name(&self) -> &String {
+        self.name.as_ref()
+    }
+
+    pub fn set_private(&mut self, new_private: bool){
+        self.private = new_private;
+    }
+
+    pub fn set_name(&mut self, new_name: String){
+        self.name = Box::new(new_name);
     }
 
     pub fn save(&self, output: &mut BitOutput){

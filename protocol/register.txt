@@ -1,4 +1,4 @@
-The client can send a register request, it must contain only CODE_REGISTER as int8
+The client can send a register request, it must contain only CODE_REGISTER as sized uint of size CTS_CODE_BITS
 
 If the account was created successfully, the server response will contain:
 true (boolean)
@@ -12,11 +12,12 @@ the error code (sized uint of size CODE_BITS)
 
 The error code must be MAX_ACCOUNTS_REACHED or RANDOM_ERROR
 
-If the client was already logged in, the server will terminate the connection instead
+If the client was already logged in, the server will terminate the connection instead.
 
 SUCCESS = 0
 MAX_ACCOUNTS_REACHED = 1
 RANDOM_ERROR = 2
 
+CTS_CODE_BITS = 2
 CODE_BITS = 2
 PASSWORD_LENGTH = 64

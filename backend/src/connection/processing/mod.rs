@@ -11,7 +11,7 @@ use crate::connection::protocol::cts::*;
 
 pub fn process_request(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
     println!("Execute task on thread {:?}", std::thread::current().id());
-    let message_code: ProtocolType = input.read_i8()?;
+    let message_code: ProtocolType = input.read_sized_u64(CODE_BITS)?;
     if message_code == CODE_LOGIN {
         return login::process_login(state, input, app, socket);
     } else if message_code == CODE_REGISTER {

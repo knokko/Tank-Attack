@@ -1,5 +1,6 @@
 extern crate bit_helper;
 
+use crate::ServerApp;
 use crate::data::image::image::{Image,ImageID};
 use crate::data::image::imagedata::ImageData;
 
@@ -8,18 +9,23 @@ use crate::data::account::manager::AccountManager;
 
 use std::path::Path;
 use std::fs::File;
+use std::sync::Arc;
 
 use std::io::{Write,Read};
 
-use bit_helper::input::{BitInput, U8VecBitInput};
+use bit_helper::input::U8VecBitInput;
 use bit_helper::output::{BitOutput, U8VecBitOutput};
 
 pub const PATH_NAME: &str = "data/images.bin";
+
 const MAX_IMAGES: usize = 10000;
+const MAX_IMAGES_PER_ACCOUNT: usize = 500;
 
 pub struct ImageManager {
 
-    images: Vec<Image>
+    images: Vec<Image>,
+
+    app: Option<Arc<ServerApp>>
 }
 
 impl ImageManager {
@@ -57,14 +63,20 @@ impl ImageManager {
             println!("Loaded an image manager with {} images", amount);
 
             ImageManager {
-                images: images
+                images: images,
+                app: None
             }
         } else {
             println!("Couldn't find the images data file, so a new empty image manager will be used");
             ImageManager {
-                images: Vec::new()
+                images: Vec::new(),
+                app: None
             }
         }
+    }
+
+    pub fn set_app_instance(&mut self, app: Arc<ServerApp>){
+        self.app = Some(app);
     }
 
     pub fn stop(&self){
@@ -79,21 +91,28 @@ impl ImageManager {
         file.write_all(output.vector.as_slice()).unwrap();
     }
 
-    /// Should always be used before calling add_image to make sure that more images can be added
-    pub fn can_add_image(&self) -> bool {
-        self.images.len() < MAX_IMAGES
-    }
-
-    /// Always call can_add_image before calling this method to make sure more images can be added
-    pub fn add_image(&mut self, private: bool, name: String, owner_id: AccountID, data: ImageData) -> Result<ImageID,std::io::Error> {
-        if !self.can_add_image() {
-            panic!("Exceeded image limit");
+    /// Will panic if there is no account with the given owner_id
+    pub fn add_image(&mut self, private: bool, name: String, owner_id: AccountID, data: ImageData) -> Result<AddImageResult,std::io::Error> {
+        if self.images.len() >= MAX_IMAGES {
+            return Ok(AddImageResult::TooManyTotal);
         }
-        let id = self.images.len() as u32;
-        let mut image = Image::new(id, owner_id, private, name);
-        image.set_data(data)?;
-        self.images.push(image);
-        Ok(id)
+        match &self.app {
+            Some(app) => {
+                let mut account_manager = app.account_manager.lock().unwrap();
+                let account = account_manager.get_mut_account(owner_id).unwrap();
+                if account.get_image_ids().len() >= MAX_IMAGES_PER_ACCOUNT {
+                    return Ok(AddImageResult::TooManyAccount);
+                }
+                let image_id = self.images.len() as ImageID;
+                let mut image = Image::new(image_id, owner_id, private, name);
+                image.set_data(data)?;
+                let created_at = image.get_created_at();
+                self.images.push(image);
+                account.add_image_id(image_id);
+                Ok(AddImageResult::SUCCESS(image_id, created_at))
+            },
+            None => panic!("The app instance of the image manager must not be None!")
+        }
     }
 
     pub fn get_image(&self, image_id: ImageID) -> Option<&Image> {
@@ -122,4 +141,11 @@ impl ImageManager {
             self.images[index].save(output);
         }
     }
+}
+
+pub enum AddImageResult {
+
+    SUCCESS(ImageID, u64),
+    TooManyTotal,
+    TooManyAccount
 }

@@ -1,6 +1,3 @@
-pub const MAX_WIDTH: usize = 256;
-pub const MAX_HEIGHT: usize = 256;
-
 pub struct ImageData {
 
     width: usize,

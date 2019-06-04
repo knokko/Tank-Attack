@@ -1,0 +1,23 @@
+Clients can request the ids of all public images owned by a certain user, the request must contain:
+CTS_CODE_IMAGE (as sized uint of size CTS_CODE_BITS)
+IMAGE_IDS (as sized uint of size IMAGE_CODE_BITS)
+The id of the user to get the image ids of (as var uint)
+
+If the request was successful, the server will send the following response:
+true (as boolean)
+SUCCESS (as sized uint of size IDS_CODE_BITS)
+The number of public images (as var uint)
+The ids of the public images (as sequence of var uints with the number of public images as size)
+
+If the request was not successful, the server will send the following response:
+true (as boolean)
+NO_ACCOUNT (as sized uint of size IDS_CODE_BITS)
+
+CTS_CODE_BITS = 2
+CTS_CODE_IMAGE = 2
+IMAGE_CODE_BITS = 3
+IMAGE_IDS = 6
+
+IDS_CODE_BITS = 1
+SUCCESS = 0
+NO_ACCOUNT = 1

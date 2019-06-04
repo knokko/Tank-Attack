@@ -1,6 +1,6 @@
 import { ByteArrayBitOutput } from 'bit-helper/output';
 import { ByteArrayBitInput } from 'bit-helper/input';
-import { CODE_LOGIN, CODE_REGISTER } from './protocol/CtS';
+import { CODE_LOGIN, CODE_REGISTER, CTS_CODE_BITS } from './protocol/CtS';
 import * as Login from './protocol/stc/Login';
 import * as Register from './protocol/stc/Register';
 import ConnectProfileManager, { PASSWORD_LENGTH } from '../storage/ConnectProfiles';
@@ -115,7 +115,7 @@ class Manager {
         const output = new ByteArrayBitOutput(new Int8Array(initialCapacity + 1), 0, function() {
             self.socket.send(this.getBytes());
         });
-        output.writeByte(messageID);
+        output.writeNumber(messageID, CTS_CODE_BITS, false);
         if (callback){
             this.waitingCallbacks.push(callback);
         }

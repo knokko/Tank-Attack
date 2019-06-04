@@ -1,7 +1,7 @@
 The login protocol is started by the client.
 
 The client to server message contains:
-CODE_LOGIN (int8)
+CODE_LOGIN (sized uint of size CTS_CODE_BITS)
 The account id to log in with (var_u64)
 The password (a sequence of uint8's of length PASSWORD_LENGTH)
 
@@ -25,4 +25,5 @@ ALREADY_LOGGED_IN = 1
 NO_ACCOUNT = 2
 WRONG_PASSWORD = 3
 
+CTS_CODE_BITS = 2
 LOGIN_CODE_BITS = 2

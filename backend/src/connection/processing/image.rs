@@ -9,17 +9,22 @@ use crate::connection::sending::image;
 
 use crate::data::image::imagedata::ImageData;
 use crate::data::image::image::MAX_IMAGE_NAME_LENGTH;
+use crate::data::image::manager::AddImageResult::*;
 
 use std::sync::Arc;
 
 pub fn process_image(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
-    let sub_code = input.read_i8()?;
+    let sub_code = input.read_sized_u64(cts::image::CODE_BITS)?;
     if sub_code == cts::image::UPLOAD {
         process_image_upload(state, input, app, socket)
-    } else if sub_code == cts::image::CHANGE {
-        process_image_change(state, input, app, socket)
-    } else if sub_code == cts::image::GET {
-        process_image_get(state, input, app, socket)
+    } else if sub_code == cts::image::CHANGE_PIXELS {
+        process_image_change_pixels(state, input, app, socket)
+    } else if sub_code == cts::image::GET_PIXELS {
+        process_image_get_pixels(state, input, app, socket)
+    } else if sub_code == cts::image::CHANGE_META {
+        process_image_change_meta(state, input, app, socket)
+    } else if sub_code == cts::image::GET_META {
+        process_image_get_meta(state, input, app, socket)
     } else if sub_code == cts::image::COPY {
         process_image_copy(state, input, app, socket)
     } else if sub_code == cts::image::IDS {
@@ -37,24 +42,27 @@ fn process_image_upload(state: &mut ConnectionState, input: &mut BitInput, app: 
         if maybe_name.is_some() {
             let name = maybe_name.unwrap();
             if name.len() <= MAX_IMAGE_NAME_LENGTH {
+                let data = ImageData::from_bits(input)?;
                 let mut image_manager = app.image_manager.lock().unwrap();
-                if image_manager.can_add_image() {
-                    let width = 1 + (input.read_u8()? as usize);
-                    let height = 1 + (input.read_u8()? as usize);
-                    let pixel_data = input.read_u8s(4 * width * height)?;
-                    let data = ImageData::from_data(pixel_data, width, height);
-                    let maybe_image_id = image_manager.add_image(private, name, account_id, data);
-                    if maybe_image_id.is_ok(){
-                        let image_id = maybe_image_id.unwrap();
-                        let created_at = image_manager.get_image(image_id).unwrap().get_created_at();
-                        image::upload::send_success(socket, image_id, created_at)?;
-                        Ok(())
-                    } else {
-                        image::upload::send_fail(socket, stc::image::upload::IO_ERROR)?;
-                        Ok(())
+                let image_add_result = image_manager.add_image(private, name, account_id, data);
+                if image_add_result.is_ok() {
+                    let image_add_enum_result = image_add_result.unwrap();
+                    match image_add_enum_result {
+                        SUCCESS(image_id, created_at) => {
+                            image::upload::send_success(socket, image_id, created_at)?;
+                            Ok(())
+                        },
+                        TooManyTotal => {
+                            image::upload::send_fail(socket, stc::image::upload::MANY_TOTAL)?;
+                            Ok(())
+                        },
+                        TooManyAccount => {
+                            image::upload::send_fail(socket, stc::image::upload::MANY_YOU)?;
+                            Ok(())
+                        }
                     }
                 } else {
-                    image::upload::send_fail(socket, stc::image::upload::MANY_TOTAL)?;
+                    image::upload::send_fail(socket, stc::image::upload::IO_ERROR)?;
                     Ok(())
                 }
             } else {
@@ -69,32 +77,31 @@ fn process_image_upload(state: &mut ConnectionState, input: &mut BitInput, app: 
     }
 }
 
-fn process_image_change(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+fn process_image_change_pixels(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
     if state.is_logged_in() {
         let account_id = state.get_account_id();
-        let image_id = input.read_u32()?;
+        let image_id = input.read_var_u64()?;
         let mut image_manager = app.image_manager.lock().unwrap();
-        let maybe_image = image_manager.get_mut_image(image_id);
+        let maybe_image = image_manager.get_mut_image(image_id as u32);
         if maybe_image.is_some() {
             let image = maybe_image.unwrap();
             if image.can_edit(account_id) {
-                let width = input.read_u8()? as usize + 1;
-                let height = input.read_u8()? as usize + 1;
-                let pixel_data = input.read_u8s(4 * width * height)?;
-                let result = image.set_data(ImageData::from_data(pixel_data, width, height));
+                let result = image.set_data(ImageData::from_bits(input)?);
                 if result.is_ok() {
-                    image::change::send_success(socket)?;
+                    image::change_pixels::send_success(socket)?;
+                    // TODO inform all clients that the image changed!!
+                    let trigger_warning = 0;
                     Ok(())
                 } else {
-                    image::change::send_fail(socket, stc::image::change::IO_ERROR)?;
+                    image::change_pixels::send_fail(socket, stc::image::change_pixels::IO_ERROR)?;
                     Ok(())
                 }
             } else {
-                image::change::send_fail(socket, stc::image::change::UNAUTHORIZED)?;
+                image::change_pixels::send_fail(socket, stc::image::change_pixels::UNAUTHORIZED)?;
                 Ok(())
             }
         } else {
-            image::change::send_fail(socket, stc::image::change::NO_IMAGE)?;
+            image::change_pixels::send_fail(socket, stc::image::change_pixels::NO_IMAGE)?;
             Ok(())
         }
     } else {
@@ -102,30 +109,30 @@ fn process_image_change(state: &mut ConnectionState, input: &mut BitInput, app: 
     }
 }
 
-fn process_image_get(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+fn process_image_get_pixels(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
     if state.is_logged_in() {
         let account_id = state.get_account_id();
-        let image_id = input.read_u32()?;
+        let image_id = input.read_var_u64()?;
         let image_manager = app.image_manager.lock().unwrap();
-        let maybe_image = image_manager.get_image(image_id);
+        let maybe_image = image_manager.get_image(image_id as u32);
         if maybe_image.is_some() {
             let requested_image = maybe_image.unwrap();
             if requested_image.can_read(account_id) {
                 let maybe_image_data = requested_image.get_data();
                 if maybe_image_data.is_ok() {
                     let image_data = maybe_image_data.unwrap();
-                    image::get::send_success(socket, image_data)?;
+                    image::get_pixels::send_success(socket, image_data)?;
                     Ok(())
                 } else {
-                    image::get::send_fail(socket, stc::image::get::IO_ERROR)?;
+                    image::get_pixels::send_fail(socket, stc::image::get_pixels::IO_ERROR)?;
                     Ok(())
                 }
             } else {
-                image::get::send_fail(socket, stc::image::get::UNAUTHORIZED)?;
+                image::get_pixels::send_fail(socket, stc::image::get_pixels::UNAUTHORIZED)?;
                 Ok(())
             }
         } else {
-            image::get::send_fail(socket, stc::image::get::NO_IMAGE)?;
+            image::get_pixels::send_fail(socket, stc::image::get_pixels::NO_IMAGE)?;
             Ok(())
         }
     } else {
@@ -133,44 +140,114 @@ fn process_image_get(state: &mut ConnectionState, input: &mut BitInput, app: Arc
     }
 }
 
+fn process_image_change_meta(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+    if state.is_logged_in() {
+        let account_id = state.get_account_id();
+        let image_id = input.read_var_u64()?;
+        let mut image_manager = app.image_manager.lock().unwrap();
+        let maybe_image = image_manager.get_mut_image(image_id as u32);
+        if maybe_image.is_some() {
+            let image = maybe_image.unwrap();
+            if image.can_edit(account_id) {
+                let new_private = input.read_bool()?;
+                let maybe_new_name = input.read_string(10000)?;
+                if maybe_new_name.is_some() {
+                    image.set_private(new_private);
+                    image.set_name(maybe_new_name.unwrap());
+                    image::change_meta::send_success(socket)?;
+                    Ok(())
+                } else {
+                    Err(static_error("Attempted to change an image name to null"))
+                }
+            } else {
+                image::change_meta::send_fail(socket, stc::image::change_meta::UNAUTHORIZED)?;
+                Ok(())
+            }
+        } else {
+            image::change_meta::send_fail(socket, stc::image::change_meta::NO_IMAGE)?;
+            Ok(())
+        }
+    } else {
+        Err(static_error("Attempted to change image metadata without logging in"))
+    }
+}
+
+fn process_image_get_meta(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+    if state.is_logged_in() {
+        let account_id = state.get_account_id();
+        let image_id = input.read_var_u64()?;
+        let image_manager = app.image_manager.lock().unwrap();
+        let maybe_image = image_manager.get_image(image_id as u32);
+        if maybe_image.is_some() {
+            let requested_image = maybe_image.unwrap();
+            if requested_image.can_read(account_id) {
+                let private = requested_image.get_private();
+                let name = requested_image.get_name();
+                let created_at = requested_image.get_created_at();
+                let last_modified = requested_image.get_last_modified();
+                image::get_meta::send_success(socket, private, name, created_at, last_modified)?;
+                Ok(())
+            } else {
+                image::get_meta::send_fail(socket, stc::image::get_meta::UNAUTHORIZED)?;
+                Ok(())
+            }
+        } else {
+            image::get_meta::send_fail(socket, stc::image::get_meta::NO_IMAGE)?;
+            Ok(())
+        }
+    } else {
+        Err(static_error("Attempted to request image metadata without logging in"))
+    }
+}
+
 fn process_image_copy(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
     if state.is_logged_in() {
         let account_id = state.get_account_id();
-        let original_image_id = input.read_u32()?;
+        let original_image_id = input.read_var_u64()?;
+        let new_private = input.read_bool()?;
         let maybe_new_image_name = input.read_string(crate::data::image::image::MAX_IMAGE_NAME_LENGTH)?;
         if maybe_new_image_name.is_some(){
             let new_image_name = maybe_new_image_name.unwrap();
             let mut image_manager = app.image_manager.lock().unwrap();
-            if image_manager.can_add_image(){
-                let maybe_original_image = image_manager.get_image(original_image_id);
-                if maybe_original_image.is_some() {
-                    let original_image = maybe_original_image.unwrap();
-                    if original_image.can_read(account_id) {
-                        let maybe_original_image_data = original_image.get_data();
-                        if maybe_original_image_data.is_ok(){
-                            let original_image_data = maybe_original_image_data.unwrap();
-                            let maybe_new_image_id = image_manager.add_image(new_image_name, account_id, original_image_data);
-                            if maybe_new_image_id.is_ok() {
-                                image::copy::send_success(socket, maybe_new_image_id.unwrap())?;
-                                Ok(())
-                            } else {
-                                image::copy::send_fail(socket, stc::image::copy::IO_ERROR_WRITE)?;
-                                Ok(())
+
+            let maybe_original_image = image_manager.get_image(original_image_id as u32);
+            if maybe_original_image.is_some() {
+                let original_image = maybe_original_image.unwrap();
+                if original_image.can_read(account_id) {
+                    let maybe_original_image_data = original_image.get_data();
+                    if maybe_original_image_data.is_ok(){
+                        let original_image_data = maybe_original_image_data.unwrap();
+                        let image_add_result = image_manager.add_image(new_private, new_image_name, account_id, original_image_data);
+                        if image_add_result.is_ok() {
+                            let enum_add_result = image_add_result.unwrap();
+                            match enum_add_result {
+                                SUCCESS(image_id, created_at) => {
+                                    image::copy::send_success(socket, image_id, created_at)?;
+                                    Ok(())
+                                },
+                                TooManyTotal => {
+                                    image::copy::send_fail(socket, stc::image::copy::MANY_TOTAL)?;
+                                    Ok(())
+                                },
+                                TooManyAccount => {
+                                    image::copy::send_fail(socket, stc::image::copy::MANY_YOU)?;
+                                    Ok(())
+                                }
                             }
                         } else {
-                            image::copy::send_fail(socket, stc::image::copy::IO_ERROR_READ)?;
+                            image::copy::send_fail(socket, stc::image::copy::IO_ERROR_WRITE)?;
                             Ok(())
                         }
                     } else {
-                        image::copy::send_fail(socket, stc::image::copy::UNAUTHORIZED)?;
+                        image::copy::send_fail(socket, stc::image::copy::IO_ERROR_READ)?;
                         Ok(())
                     }
                 } else {
-                    image::copy::send_fail(socket, stc::image::copy::NO_IMAGE)?;
+                    image::copy::send_fail(socket, stc::image::copy::UNAUTHORIZED)?;
                     Ok(())
                 }
             } else {
-                image::copy::send_fail(socket, stc::image::copy::MANY_TOTAL)?;
+                image::copy::send_fail(socket, stc::image::copy::NO_IMAGE)?;
                 Ok(())
             }
         } else {
@@ -184,7 +261,7 @@ fn process_image_copy(state: &mut ConnectionState, input: &mut BitInput, app: Ar
 fn process_image_ids(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
     if state.is_logged_in() {
         let own_account_id = state.get_account_id();
-        let owner_account_id = input.read_u32()?;
+        let owner_account_id = input.read_var_u64()? as u32;
         let account_manager = app.account_manager.lock().unwrap();
         let maybe_owner_account = account_manager.get_account(owner_account_id);
         if maybe_owner_account.is_some() {

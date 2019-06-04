@@ -1,0 +1,26 @@
+The client can request the pixel data of an image. The request must contain:
+CODE_IMAGE (as sized uint of size CTS_CODE_BITS)
+IMAGE_GET_PIXELS (as sized uint of size IMAGE_CODE_BITS)
+The image id (as var uint)
+
+If the server accepts the request, it will send the following response:
+true (as boolean)
+SUCCESS (as sized uint of size GET_CODE_BITS)
+The width of the image - 1 (as uint8)
+The height of the image - 1 (as uint8)
+The pixel rgba data of the image (as uint8 sequence of length width * height * 4)
+
+If the server does not accept the request, it will send the following response:
+true (as boolean)
+IO_ERROR or UNAUTHORIZED or NO_IMAGE (as sized uint of size GET_CODE_BITS)
+
+CTS_CODE_BITS = 2
+CODE_IMAGE = 2
+IMAGE_CODE_BITS = 3
+IMAGE_GET_PIXELS = 2
+
+GET_CODE_BITS = 2
+SUCCESS = 0
+IO_ERROR = 1
+UNAUTHORIZED = 2
+NO_IMAGE = 3

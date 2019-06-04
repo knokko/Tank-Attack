@@ -1,0 +1,20 @@
+The client can request to change the metadata (currently name and private status) of an image, the request must contain:
+CODE_IMAGE (as sized uint of size CTS_CODE_BITS)
+IMAGE_CHANGE_META (as sized uint of size IMAGE_CODE_BITS)
+The id of the image to change (as var uint)
+The new private status (as boolean)
+The new name (as string)
+
+The server will send the following response:
+true (as boolean)
+SUCCESS or UNAUTHORIZED or NO_IMAGE (as sized uint of size CHANGE_META_CODE_BITS)
+
+CTS_CODE_BITS = 2
+CODE_IMAGE = 2
+IMAGE_CODE_BITS = 3
+IMAGE_CHANGE_META = 3
+
+CHANGE_META_CODE_BITS = 2
+SUCCESS = 0
+UNAUTHORIZED = 1
+NO_IMAGE = 2
