@@ -1,5 +1,9 @@
 pub type CodeType = u64;
 
+pub const IMAGE_CHANGE: CodeType = 0;
+
+pub const CODE_BITS: usize = 1;
+
 pub mod upload {
 
     pub use super::CodeType;

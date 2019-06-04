@@ -8,7 +8,7 @@ use crate::connection::protocol::stc;
 use crate::connection::sending::image;
 
 use crate::data::image::imagedata::ImageData;
-use crate::data::image::image::MAX_IMAGE_NAME_LENGTH;
+use crate::data::image::image::{ImageID,MAX_IMAGE_NAME_LENGTH};
 use crate::data::image::manager::AddImageResult::*;
 
 use std::sync::Arc;
@@ -89,8 +89,7 @@ fn process_image_change_pixels(state: &mut ConnectionState, input: &mut BitInput
                 let result = image.set_data(ImageData::from_bits(input)?);
                 if result.is_ok() {
                     image::change_pixels::send_success(socket)?;
-                    // TODO inform all clients that the image changed!!
-                    let trigger_warning = 0;
+                    image::broadcast_changed_pixels(Arc::clone(&app), image_id as ImageID);
                     Ok(())
                 } else {
                     image::change_pixels::send_fail(socket, stc::image::change_pixels::IO_ERROR)?;

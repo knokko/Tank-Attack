@@ -1,3 +1,21 @@
+use super::broadcast;
+
+use crate::ServerApp;
+use crate::connection::protocol::stc;
+use crate::data::image::image::ImageID;
+
+use std::sync::Arc;
+use bit_helper::output::{BitOutput, U8VecBitOutput};
+
+pub fn broadcast_changed_pixels(app: Arc<ServerApp>, image_id: ImageID){
+    let mut output = U8VecBitOutput::with_capacity(3);
+    output.add_bool(false);
+    output.add_sized_u64(stc::IMAGE, stc::CODE_BITS);
+    output.add_sized_u64(stc::image::IMAGE_CHANGE, stc::image::CODE_BITS);
+    output.add_var_u64(image_id as u64);
+    broadcast(app, output.vector);
+}
+
 pub mod upload {
 
     use std::sync::Arc;
