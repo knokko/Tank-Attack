@@ -1,6 +1,6 @@
 mod handling;
-mod protocol;
-mod processing;
-mod state;
-mod sending;
 pub mod manager;
+mod processing;
+mod protocol;
+mod sending;
+mod state;

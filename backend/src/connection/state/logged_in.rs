@@ -1,18 +1,16 @@
-use crate::ServerApp;
 use crate::data::account::account::AccountID;
+use crate::ServerApp;
 
 use std::sync::Arc;
 
 pub struct LoggedInState {
-
-    account_id: AccountID
+    account_id: AccountID,
 }
 
 impl LoggedInState {
-
     pub fn new(account_id: AccountID) -> LoggedInState {
         LoggedInState {
-            account_id: account_id
+            account_id: account_id,
         }
     }
 
@@ -20,8 +18,11 @@ impl LoggedInState {
         self.account_id
     }
 
-    pub fn on_drop(&self, app: &Arc<ServerApp>){
+    pub fn on_drop(&self, app: &Arc<ServerApp>) {
         let mut account_manager = app.account_manager.lock().unwrap();
-        account_manager.get_mut_account(self.account_id).unwrap().set_logged_out();
+        account_manager
+            .get_mut_account(self.account_id)
+            .unwrap()
+            .set_logged_out();
     }
 }

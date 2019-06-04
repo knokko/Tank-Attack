@@ -1,6 +1,6 @@
+pub mod image;
 pub mod login;
 pub mod register;
-pub mod image;
 
 pub type ProtocolType = u64;
 

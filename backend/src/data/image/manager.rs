@@ -1,17 +1,17 @@
 extern crate bit_helper;
 
-use crate::ServerApp;
-use crate::data::image::image::{Image,ImageID};
+use crate::data::image::image::{Image, ImageID};
 use crate::data::image::imagedata::ImageData;
+use crate::ServerApp;
 
 use crate::data::account::account::AccountID;
 use crate::data::account::manager::AccountManager;
 
-use std::path::Path;
 use std::fs::File;
+use std::path::Path;
 use std::sync::Arc;
 
-use std::io::{Write,Read};
+use std::io::{Read, Write};
 
 use bit_helper::input::U8VecBitInput;
 use bit_helper::output::{BitOutput, U8VecBitOutput};
@@ -22,14 +22,12 @@ const MAX_IMAGES: usize = 10000;
 const MAX_IMAGES_PER_ACCOUNT: usize = 500;
 
 pub struct ImageManager {
-
     images: Vec<Image>,
 
-    app: Option<Arc<ServerApp>>
+    app: Option<Arc<ServerApp>>,
 }
 
 impl ImageManager {
-
     pub fn init(account_manager: &mut AccountManager) -> ImageManager {
         let path = Path::new(PATH_NAME);
         if path.exists() {
@@ -53,33 +51,41 @@ impl ImageManager {
             }
 
             for account_id in 0..account_amount_buffer.len() {
-                account_manager.get_mut_account(account_id as u32).unwrap().reserve_image_capacity(account_amount_buffer[account_id]);
+                account_manager
+                    .get_mut_account(account_id as u32)
+                    .unwrap()
+                    .reserve_image_capacity(account_amount_buffer[account_id]);
             }
 
             for image_id in 0..images.len() {
-                account_manager.get_mut_account(images[image_id].get_owner_id()).unwrap().add_image_id(image_id as ImageID);
+                account_manager
+                    .get_mut_account(images[image_id].get_owner_id())
+                    .unwrap()
+                    .add_image_id(image_id as ImageID);
             }
 
             println!("Loaded an image manager with {} images", amount);
 
             ImageManager {
                 images: images,
-                app: None
+                app: None,
             }
         } else {
-            println!("Couldn't find the images data file, so a new empty image manager will be used");
+            println!(
+                "Couldn't find the images data file, so a new empty image manager will be used"
+            );
             ImageManager {
                 images: Vec::new(),
-                app: None
+                app: None,
             }
         }
     }
 
-    pub fn set_app_instance(&mut self, app: Arc<ServerApp>){
+    pub fn set_app_instance(&mut self, app: Arc<ServerApp>) {
         self.app = Some(app);
     }
 
-    pub fn stop(&self){
+    pub fn stop(&self) {
         let mut output = U8VecBitOutput::with_capacity(4 + self.images.len() * 10);
         self.save(&mut output);
         output.terminate();
@@ -92,7 +98,13 @@ impl ImageManager {
     }
 
     /// Will panic if there is no account with the given owner_id
-    pub fn add_image(&mut self, private: bool, name: String, owner_id: AccountID, data: ImageData) -> Result<AddImageResult,std::io::Error> {
+    pub fn add_image(
+        &mut self,
+        private: bool,
+        name: String,
+        owner_id: AccountID,
+        data: ImageData,
+    ) -> Result<AddImageResult, std::io::Error> {
         if self.images.len() >= MAX_IMAGES {
             return Ok(AddImageResult::TooManyTotal);
         }
@@ -110,8 +122,8 @@ impl ImageManager {
                 self.images.push(image);
                 account.add_image_id(image_id);
                 Ok(AddImageResult::SUCCESS(image_id, created_at))
-            },
-            None => panic!("The app instance of the image manager must not be None!")
+            }
+            None => panic!("The app instance of the image manager must not be None!"),
         }
     }
 
@@ -135,17 +147,16 @@ impl ImageManager {
         (image_id as usize) < self.images.len()
     }
 
-    fn save(&self, output: &mut BitOutput){
+    fn save(&self, output: &mut BitOutput) {
         output.add_u32(self.images.len() as u32);
-        for index in 0..self.images.len(){
+        for index in 0..self.images.len() {
             self.images[index].save(output);
         }
     }
 }
 
 pub enum AddImageResult {
-
     SUCCESS(ImageID, u64),
     TooManyTotal,
-    TooManyAccount
+    TooManyAccount,
 }

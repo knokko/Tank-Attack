@@ -1,19 +1,24 @@
 use bit_helper::input::BitInput;
 
-use crate::ServerApp;
-use crate::connection::state::ConnectionState;
 use crate::connection::handling::error::*;
 use crate::connection::protocol::cts;
 use crate::connection::protocol::stc;
 use crate::connection::sending::image;
+use crate::connection::state::ConnectionState;
+use crate::ServerApp;
 
+use crate::data::image::image::{ImageID, MAX_IMAGE_NAME_LENGTH};
 use crate::data::image::imagedata::ImageData;
-use crate::data::image::image::{ImageID,MAX_IMAGE_NAME_LENGTH};
 use crate::data::image::manager::AddImageResult::*;
 
 use std::sync::Arc;
 
-pub fn process_image(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+pub fn process_image(
+    state: &mut ConnectionState,
+    input: &mut BitInput,
+    app: Arc<ServerApp>,
+    socket: Arc<ws::Sender>,
+) -> Result<(), FatalProcessError> {
     let sub_code = input.read_sized_u64(cts::image::CODE_BITS)?;
     if sub_code == cts::image::UPLOAD {
         process_image_upload(state, input, app, socket)
@@ -30,11 +35,19 @@ pub fn process_image(state: &mut ConnectionState, input: &mut BitInput, app: Arc
     } else if sub_code == cts::image::IDS {
         process_image_ids(state, input, app, socket)
     } else {
-        Err(dynamic_error(format!("Invalid image operation code: {}", sub_code)))
+        Err(dynamic_error(format!(
+            "Invalid image operation code: {}",
+            sub_code
+        )))
     }
 }
 
-fn process_image_upload(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+fn process_image_upload(
+    state: &mut ConnectionState,
+    input: &mut BitInput,
+    app: Arc<ServerApp>,
+    socket: Arc<ws::Sender>,
+) -> Result<(), FatalProcessError> {
     if state.is_logged_in() {
         let account_id = state.get_account_id();
         let private = input.read_bool()?;
@@ -51,11 +64,11 @@ fn process_image_upload(state: &mut ConnectionState, input: &mut BitInput, app: 
                         SUCCESS(image_id, created_at) => {
                             image::upload::send_success(socket, image_id, created_at)?;
                             Ok(())
-                        },
+                        }
                         TooManyTotal => {
                             image::upload::send_fail(socket, stc::image::upload::MANY_TOTAL)?;
                             Ok(())
-                        },
+                        }
                         TooManyAccount => {
                             image::upload::send_fail(socket, stc::image::upload::MANY_YOU)?;
                             Ok(())
@@ -73,11 +86,18 @@ fn process_image_upload(state: &mut ConnectionState, input: &mut BitInput, app: 
             Err(static_error("Attempted to upload an image without name"))
         }
     } else {
-        Err(static_error("Attempted to upload an image without logging in"))
+        Err(static_error(
+            "Attempted to upload an image without logging in",
+        ))
     }
 }
 
-fn process_image_change_pixels(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+fn process_image_change_pixels(
+    state: &mut ConnectionState,
+    input: &mut BitInput,
+    app: Arc<ServerApp>,
+    socket: Arc<ws::Sender>,
+) -> Result<(), FatalProcessError> {
     if state.is_logged_in() {
         let account_id = state.get_account_id();
         let image_id = input.read_var_u64()?;
@@ -104,11 +124,18 @@ fn process_image_change_pixels(state: &mut ConnectionState, input: &mut BitInput
             Ok(())
         }
     } else {
-        Err(static_error("Attempted to change an image without logging in"))
+        Err(static_error(
+            "Attempted to change an image without logging in",
+        ))
     }
 }
 
-fn process_image_get_pixels(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+fn process_image_get_pixels(
+    state: &mut ConnectionState,
+    input: &mut BitInput,
+    app: Arc<ServerApp>,
+    socket: Arc<ws::Sender>,
+) -> Result<(), FatalProcessError> {
     if state.is_logged_in() {
         let account_id = state.get_account_id();
         let image_id = input.read_var_u64()?;
@@ -135,11 +162,18 @@ fn process_image_get_pixels(state: &mut ConnectionState, input: &mut BitInput, a
             Ok(())
         }
     } else {
-        Err(static_error("Attempted to request an image without logging in"))
+        Err(static_error(
+            "Attempted to request an image without logging in",
+        ))
     }
 }
 
-fn process_image_change_meta(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+fn process_image_change_meta(
+    state: &mut ConnectionState,
+    input: &mut BitInput,
+    app: Arc<ServerApp>,
+    socket: Arc<ws::Sender>,
+) -> Result<(), FatalProcessError> {
     if state.is_logged_in() {
         let account_id = state.get_account_id();
         let image_id = input.read_var_u64()?;
@@ -167,11 +201,18 @@ fn process_image_change_meta(state: &mut ConnectionState, input: &mut BitInput, 
             Ok(())
         }
     } else {
-        Err(static_error("Attempted to change image metadata without logging in"))
+        Err(static_error(
+            "Attempted to change image metadata without logging in",
+        ))
     }
 }
 
-fn process_image_get_meta(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+fn process_image_get_meta(
+    state: &mut ConnectionState,
+    input: &mut BitInput,
+    app: Arc<ServerApp>,
+    socket: Arc<ws::Sender>,
+) -> Result<(), FatalProcessError> {
     if state.is_logged_in() {
         let account_id = state.get_account_id();
         let image_id = input.read_var_u64()?;
@@ -195,17 +236,25 @@ fn process_image_get_meta(state: &mut ConnectionState, input: &mut BitInput, app
             Ok(())
         }
     } else {
-        Err(static_error("Attempted to request image metadata without logging in"))
+        Err(static_error(
+            "Attempted to request image metadata without logging in",
+        ))
     }
 }
 
-fn process_image_copy(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+fn process_image_copy(
+    state: &mut ConnectionState,
+    input: &mut BitInput,
+    app: Arc<ServerApp>,
+    socket: Arc<ws::Sender>,
+) -> Result<(), FatalProcessError> {
     if state.is_logged_in() {
         let account_id = state.get_account_id();
         let original_image_id = input.read_var_u64()?;
         let new_private = input.read_bool()?;
-        let maybe_new_image_name = input.read_string(crate::data::image::image::MAX_IMAGE_NAME_LENGTH)?;
-        if maybe_new_image_name.is_some(){
+        let maybe_new_image_name =
+            input.read_string(crate::data::image::image::MAX_IMAGE_NAME_LENGTH)?;
+        if maybe_new_image_name.is_some() {
             let new_image_name = maybe_new_image_name.unwrap();
             let mut image_manager = app.image_manager.lock().unwrap();
 
@@ -214,20 +263,25 @@ fn process_image_copy(state: &mut ConnectionState, input: &mut BitInput, app: Ar
                 let original_image = maybe_original_image.unwrap();
                 if original_image.can_read(account_id) {
                     let maybe_original_image_data = original_image.get_data();
-                    if maybe_original_image_data.is_ok(){
+                    if maybe_original_image_data.is_ok() {
                         let original_image_data = maybe_original_image_data.unwrap();
-                        let image_add_result = image_manager.add_image(new_private, new_image_name, account_id, original_image_data);
+                        let image_add_result = image_manager.add_image(
+                            new_private,
+                            new_image_name,
+                            account_id,
+                            original_image_data,
+                        );
                         if image_add_result.is_ok() {
                             let enum_add_result = image_add_result.unwrap();
                             match enum_add_result {
                                 SUCCESS(image_id, created_at) => {
                                     image::copy::send_success(socket, image_id, created_at)?;
                                     Ok(())
-                                },
+                                }
                                 TooManyTotal => {
                                     image::copy::send_fail(socket, stc::image::copy::MANY_TOTAL)?;
                                     Ok(())
-                                },
+                                }
                                 TooManyAccount => {
                                     image::copy::send_fail(socket, stc::image::copy::MANY_YOU)?;
                                     Ok(())
@@ -253,11 +307,18 @@ fn process_image_copy(state: &mut ConnectionState, input: &mut BitInput, app: Ar
             Err(static_error("No name for the new image was given"))
         }
     } else {
-        Err(static_error("Attempted to copy an image without logging in"))
+        Err(static_error(
+            "Attempted to copy an image without logging in",
+        ))
     }
 }
 
-fn process_image_ids(state: &mut ConnectionState, input: &mut BitInput, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+fn process_image_ids(
+    state: &mut ConnectionState,
+    input: &mut BitInput,
+    app: Arc<ServerApp>,
+    socket: Arc<ws::Sender>,
+) -> Result<(), FatalProcessError> {
     if state.is_logged_in() {
         let own_account_id = state.get_account_id();
         let owner_account_id = input.read_var_u64()? as u32;
@@ -270,13 +331,12 @@ fn process_image_ids(state: &mut ConnectionState, input: &mut BitInput, app: Arc
             let mut visible_image_ids = Vec::with_capacity(image_ids.len());
             for image_id in image_ids {
                 let image = image_manager.get_image(*image_id).unwrap();
-                if image.can_read(own_account_id){
+                if image.can_read(own_account_id) {
                     visible_image_ids.push(*image_id);
                 }
             }
             image::ids::send_success(socket, visible_image_ids)?;
             Ok(())
-            
         } else {
             image::ids::send_no_account(socket)?;
             Ok(())

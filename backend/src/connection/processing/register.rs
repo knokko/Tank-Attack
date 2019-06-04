@@ -1,12 +1,16 @@
-use crate::connection::handling::error::*;
-use crate::connection::state::ConnectionState;
 use crate::connection::handling::error::FatalProcessError;
+use crate::connection::handling::error::*;
 use crate::connection::sending::register;
+use crate::connection::state::ConnectionState;
 use crate::ServerApp;
 
 use std::sync::Arc;
 
-pub fn process_register(state: &mut ConnectionState, app: Arc<ServerApp>, socket: Arc<ws::Sender>) -> Result<(),FatalProcessError> {
+pub fn process_register(
+    state: &mut ConnectionState,
+    app: Arc<ServerApp>,
+    socket: Arc<ws::Sender>,
+) -> Result<(), FatalProcessError> {
     if !state.is_logged_in() {
         let mut account_manager = app.account_manager.lock().unwrap();
         if account_manager.can_create_account() {
@@ -24,6 +28,8 @@ pub fn process_register(state: &mut ConnectionState, app: Arc<ServerApp>, socket
         }
         Ok(())
     } else {
-        return Err(static_error("Attempted creation of account while logged in"));
+        return Err(static_error(
+            "Attempted creation of account while logged in",
+        ));
     }
 }

@@ -1,15 +1,15 @@
-extern crate ws;
 extern crate ring;
+extern crate ws;
 
-mod input;
-mod data;
 mod connection;
+mod data;
+mod input;
 
-use std::sync::{Arc,Mutex};
+use std::sync::{Arc, Mutex};
 
+use crate::connection::manager::ConnectionManager;
 use crate::data::account::manager::AccountManager;
 use crate::data::image::manager::ImageManager;
-use crate::connection::manager::ConnectionManager;
 
 use ring::rand::SystemRandom;
 
@@ -24,7 +24,7 @@ fn main() {
         account_manager: Mutex::new(account_manager),
         image_manager: Mutex::new(image_manager),
         secure_random: Box::new(SystemRandom::new()),
-        test_counter: Mutex::new(0)
+        test_counter: Mutex::new(0),
     });
 
     {
@@ -57,19 +57,18 @@ pub struct ServerApp {
     account_manager: Mutex<AccountManager>,
     image_manager: Mutex<ImageManager>,
     secure_random: Box<SystemRandom>,
-    test_counter: Mutex<i8>
+    test_counter: Mutex<i8>,
 }
 
 impl ServerApp {
-
-    fn stop_websocket_server(&self){
+    fn stop_websocket_server(&self) {
         let connection_manager = self.connection_manager.lock().unwrap();
         let ref_manager = connection_manager.as_ref();
-        if ref_manager.is_some(){
+        if ref_manager.is_some() {
             let result = ref_manager.unwrap().get_server_handle().shutdown();
             match result {
                 Ok(_) => println!("Closed the websocket server"),
-                Err(cause) => println!("Failed to close the websocket server because {}", cause)
+                Err(cause) => println!("Failed to close the websocket server because {}", cause),
             };
         }
     }

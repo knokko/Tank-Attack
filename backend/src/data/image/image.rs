@@ -1,22 +1,21 @@
 extern crate bit_helper;
 
-use std::path::Path;
-use std::io::{Read,Write,Error};
 use std::fs::File;
+use std::io::{Error, Read, Write};
+use std::path::Path;
 use std::time::SystemTime;
 
-use crate::data::image::imagedata::ImageData;
 use crate::data::account::account::AccountID;
+use crate::data::image::imagedata::ImageData;
 
+use bit_helper::input::{BitInput, BitInputError};
 use bit_helper::output::BitOutput;
-use bit_helper::input::{BitInput,BitInputError};
 
 pub const MAX_IMAGE_NAME_LENGTH: usize = 40;
 
 pub type ImageID = u32;
 
 pub struct Image {
-
     id: ImageID,
     owner_id: AccountID,
 
@@ -25,15 +24,17 @@ pub struct Image {
     created_at: u64,
     last_modified: u64,
 
-    name: Box<String>
+    name: Box<String>,
 }
 
 fn current_time() -> u64 {
-    SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis() as u64
+    SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64
 }
 
 impl Image {
-
     pub fn new(image_id: ImageID, owner_id: AccountID, private: bool, name: String) -> Image {
         Image {
             id: image_id,
@@ -41,18 +42,18 @@ impl Image {
             created_at: 0,
             last_modified: 0,
             private: private,
-            name: Box::new(name)
+            name: Box::new(name),
         }
     }
 
-    pub fn load(image_id: ImageID, input: &mut BitInput) -> Result<Image,BitInputError> {
+    pub fn load(image_id: ImageID, input: &mut BitInput) -> Result<Image, BitInputError> {
         Ok(Image {
             id: image_id,
             owner_id: input.read_var_u64()? as u32,
             private: input.read_bool()?,
             created_at: input.read_var_u64()?,
             last_modified: input.read_var_u64()?,
-            name: Box::new(input.read_string(MAX_IMAGE_NAME_LENGTH)?.unwrap())
+            name: Box::new(input.read_string(MAX_IMAGE_NAME_LENGTH)?.unwrap()),
         })
     }
 
@@ -102,15 +103,15 @@ impl Image {
         self.name.as_ref()
     }
 
-    pub fn set_private(&mut self, new_private: bool){
+    pub fn set_private(&mut self, new_private: bool) {
         self.private = new_private;
     }
 
-    pub fn set_name(&mut self, new_name: String){
+    pub fn set_name(&mut self, new_name: String) {
         self.name = Box::new(new_name);
     }
 
-    pub fn save(&self, output: &mut BitOutput){
+    pub fn save(&self, output: &mut BitOutput) {
         output.add_var_u64(self.owner_id as u64);
         output.add_bool(self.private);
         output.add_var_u64(self.created_at);

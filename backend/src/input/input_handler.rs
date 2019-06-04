@@ -1,13 +1,15 @@
-use std::sync::Arc;
-use std::str::SplitWhitespace;
 use crate::ServerApp;
+use std::str::SplitWhitespace;
+use std::sync::Arc;
 
-pub fn start(application: Arc<ServerApp>){
+pub fn start(application: Arc<ServerApp>) {
     std::thread::spawn(move || {
         let mut input = String::new();
         println!("Listening for your input...");
         loop {
-            std::io::stdin().read_line(&mut input).expect("Unable to read user input");
+            std::io::stdin()
+                .read_line(&mut input)
+                .expect("Unable to read user input");
             if handle_user_input(Arc::clone(&application), &input) {
                 break;
             } else {
@@ -23,7 +25,7 @@ fn handle_user_input(application: Arc<ServerApp>, input: &String) -> bool {
         let maybe_line = lines.next();
         if maybe_line.is_some() {
             let line = maybe_line.unwrap();
-            if execute_user_command(Arc::clone(&application), line){
+            if execute_user_command(Arc::clone(&application), line) {
                 return true;
             }
         } else {
@@ -44,7 +46,8 @@ fn execute_user_command(application: Arc<ServerApp>, command: &str) -> bool {
         }
         if first.eq("test_counter") {
             execute_test_counter_command(application, &mut line_iterator);
-        } /* else if first.eq("getbyte") {
+        }
+        /* else if first.eq("getbyte") {
             execute_get_byte_command(application, &mut line_iterator);
         } else if first.eq("setbyte") {
             execute_set_byte_command(application, &mut line_iterator);
@@ -52,7 +55,8 @@ fn execute_user_command(application: Arc<ServerApp>, command: &str) -> bool {
             execute_add_byte_command(application, &mut line_iterator);
         } else if first.eq("length"){
             execute_length_command(application);
-        } */else {
+        } */
+        else {
             println!("Unknown command. Use the 'help' command for a list of commands");
         }
     } else {
@@ -145,14 +149,17 @@ fn execute_length_command(application: Arc<ServerApp>){
     };
 }*/
 
-fn execute_test_counter_command(application: Arc<ServerApp>, command: &mut SplitWhitespace){
+fn execute_test_counter_command(application: Arc<ServerApp>, command: &mut SplitWhitespace) {
     let maybe_second = command.next();
     if maybe_second.is_some() {
         let second = maybe_second.unwrap();
         if second.eq("incr") {
             *application.test_counter.lock().unwrap() += 1;
-        } else if second.eq("get"){
-            println!("Current value of test_counter is {}", *application.test_counter.lock().unwrap());
+        } else if second.eq("get") {
+            println!(
+                "Current value of test_counter is {}",
+                *application.test_counter.lock().unwrap()
+            );
         } else {
             print_test_counter_usage();
         }
@@ -161,7 +168,7 @@ fn execute_test_counter_command(application: Arc<ServerApp>, command: &mut Split
     }
 }
 
-fn print_test_counter_usage(){
+fn print_test_counter_usage() {
     println!("You should use:");
     println!("'test_counter incr' OR 'test_counter get'");
 }

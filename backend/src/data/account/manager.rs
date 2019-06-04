@@ -1,27 +1,25 @@
-extern crate ring;
 extern crate bit_helper;
+extern crate ring;
 
 use ring::rand::SecureRandom;
 
-use bit_helper::input::{BitInput, U8VecBitInput, BitInputError};
+use bit_helper::input::{BitInput, BitInputError, U8VecBitInput};
 use bit_helper::output::{BitOutput, U8VecBitOutput};
 
-use crate::data::account::account::{Account,PASSWORD_LENGTH};
+use crate::data::account::account::{Account, PASSWORD_LENGTH};
 
-use std::path::Path;
 use std::fs::File;
-use std::io::{Write,Read};
+use std::io::{Read, Write};
+use std::path::Path;
 
 const PATH_NAME: &str = "data/accounts.bin";
 const MAX_ACCOUNTS: usize = 5000;
 
 pub struct AccountManager {
-
-    accounts: Vec<Account>
+    accounts: Vec<Account>,
 }
 
 impl AccountManager {
-
     pub fn init() -> AccountManager {
         let path = Path::new(PATH_NAME);
         if path.exists() {
@@ -39,24 +37,22 @@ impl AccountManager {
         } else {
             println!("Couldn't find the previous account data, so a new empty account manager will be used");
             AccountManager {
-                accounts: Vec::new()
+                accounts: Vec::new(),
             }
         }
     }
 
-    fn load(input: &mut BitInput) -> Result<AccountManager,BitInputError> {
+    fn load(input: &mut BitInput) -> Result<AccountManager, BitInputError> {
         let amount = input.read_u32().unwrap();
         let mut accounts = Vec::with_capacity(amount as usize);
         for id in 0..amount {
             accounts.push(Account::load(id, input)?);
         }
         println!("Loaded the account manager with {} accounts", amount);
-        Ok(AccountManager {
-            accounts: accounts
-        })
+        Ok(AccountManager { accounts: accounts })
     }
 
-    fn save(&self, output: &mut BitOutput){
+    fn save(&self, output: &mut BitOutput) {
         output.add_u32(self.accounts.len() as u32);
         for index in 0..self.accounts.len() {
             self.accounts[index].save(output);
@@ -80,7 +76,10 @@ impl AccountManager {
     }
 
     /// Always use can_create_account before using this method to make sure another account can be added
-    pub fn create_account(&mut self, random: &SecureRandom) -> Result<&Account,ring::error::Unspecified> {
+    pub fn create_account(
+        &mut self,
+        random: &SecureRandom,
+    ) -> Result<&Account, ring::error::Unspecified> {
         if !self.can_create_account() {
             panic!("Exceeded account limit");
         }
@@ -102,8 +101,9 @@ impl AccountManager {
         self.accounts.len()
     }
 
-    pub fn stop(&self){
-        let mut output = U8VecBitOutput::with_capacity(4 + self.accounts.len() * (4 + PASSWORD_LENGTH));
+    pub fn stop(&self) {
+        let mut output =
+            U8VecBitOutput::with_capacity(4 + self.accounts.len() * (4 + PASSWORD_LENGTH));
         self.save(&mut output);
         output.terminate();
 

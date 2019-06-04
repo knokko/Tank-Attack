@@ -1,13 +1,12 @@
 use bit_helper::input::BitInputError;
 
-use std::fmt::{Display,Result,Formatter};
+use std::fmt::{Display, Formatter, Result};
 
 pub enum FatalProcessError {
-
     Form(BitInputError),
     StaticValue(StaticFatalValueError),
     DynamicValue(DynamicFatalValueError),
-    WS(ws::Error)
+    WS(ws::Error),
 }
 
 impl Display for FatalProcessError {
@@ -16,7 +15,7 @@ impl Display for FatalProcessError {
             FatalProcessError::Form(bie) => bie.fmt(f),
             FatalProcessError::StaticValue(sv) => sv.fmt(f),
             FatalProcessError::DynamicValue(dv) => dv.fmt(f),
-            FatalProcessError::WS(ws) => ws.fmt(f)
+            FatalProcessError::WS(ws) => ws.fmt(f),
         }
     }
 }
@@ -30,56 +29,44 @@ pub fn dynamic_error(cause: String) -> FatalProcessError {
 }
 
 pub struct StaticFatalValueError {
-
-    reason: &'static str
+    reason: &'static str,
 }
 
 impl Display for StaticFatalValueError {
-
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(f, "{}", self.reason)
     }
 }
 
 impl StaticFatalValueError {
-
     pub fn new(reason: &'static str) -> StaticFatalValueError {
-        StaticFatalValueError {
-            reason: reason
-        }
+        StaticFatalValueError { reason: reason }
     }
 }
 
 pub struct DynamicFatalValueError {
-
-    reason: String
+    reason: String,
 }
 
 impl Display for DynamicFatalValueError {
-
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(f, "{}", self.reason)
     }
 }
 
 impl DynamicFatalValueError {
-
     pub fn new(reason: String) -> DynamicFatalValueError {
-        DynamicFatalValueError {
-            reason: reason
-        }
+        DynamicFatalValueError { reason: reason }
     }
 }
 
 impl From<BitInputError> for FatalProcessError {
-
     fn from(error: BitInputError) -> FatalProcessError {
         FatalProcessError::Form(error)
     }
 }
 
 impl From<ws::Error> for FatalProcessError {
-
     fn from(error: ws::Error) -> FatalProcessError {
         FatalProcessError::WS(error)
     }
