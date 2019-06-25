@@ -47,6 +47,10 @@ class ManagerClass {
         this.selected = this.profiles.length;
         this.profiles.push(new ConnectProfile("New profile", ADDRESS, -1, null));
     }
+
+    getSelectedProfile(){
+        return this.profiles[this.selected];
+    }
 }
 
 export class ConnectProfile {

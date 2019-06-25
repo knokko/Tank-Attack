@@ -1,4 +1,5 @@
 import React, { Component, Fragment } from 'react';
+import ImageBody from './collection/Images';
 import './Collection.css';
 
 export default class CollectionMenu extends Component {
@@ -10,7 +11,7 @@ export default class CollectionMenu extends Component {
         };
 
         // TODO Add the other body components and create a class for the images component
-        this.imagesBodyComponent = <Fragment>Images body</Fragment>;
+        this.imagesBodyComponent = <ImageBody />;
         this.tilesBodyComponent = <Fragment>Tiles body</Fragment>;
         this.levelsBodyComponent = <Fragment>Levels body</Fragment>;
         this.projectilesBodyComponent = <Fragment>Projectiles body</Fragment>;
@@ -46,7 +47,8 @@ export default class CollectionMenu extends Component {
         return <button 
             className="Collection-Upper-Button"
             onClick={_ => {
-                this.setBodyComponent(this[text + 'BodyComponent']);
+                this[text + 'BodyComponent'].showOnReady(this.setBodyComponent);
+                //this.setBodyComponent(this[text + 'BodyComponent']);
             }}
         >{ text.charAt(0).toUpperCase() + text.substring(1) }</button>;
     }
