@@ -12,8 +12,8 @@ export default class CollectionMenu extends Component {
             }
         };
 
-        // TODO Add the other body components and create a class for the images component
-        this.imagesBodyComponent = new ImageBody();
+        // TODO Add the other body components
+        this.imagesBodyComponent = new ImageBody({collectionMenu: this});
         this.tilesBodyComponent = <Fragment>Tiles body</Fragment>;
         this.levelsBodyComponent = <Fragment>Levels body</Fragment>;
         this.projectilesBodyComponent = <Fragment>Projectiles body</Fragment>;

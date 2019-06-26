@@ -2,6 +2,7 @@ import React, { Component, Fragment } from 'react';
 import ImageManager from '../../../../manage/image/ImageManager';
 import ProfileManager from '../../../../manage/storage/ConnectProfiles';
 import UserImageComponent from '../../../component/image/UserImage';
+import CreateImageMenu from './images/Create';
 import './Images.css';
 
 export default class ImageMenu extends Component {
@@ -12,6 +13,8 @@ export default class ImageMenu extends Component {
             images: null,
             selectedImage: null
         };
+
+        this.toCreateImageMenu = this.toCreateImageMenu.bind(this);
     }
 
     showOnReady(callback){
@@ -41,6 +44,11 @@ export default class ImageMenu extends Component {
         });
     }
 
+    toCreateImageMenu(){
+        const collectionMenu = this.props.collectionMenu;
+        collectionMenu.setBodyComponent(new CreateImageMenu({collectionMenu: collectionMenu, imagesMenu: this}));
+    }
+
     render(){
         return (<Fragment>
             <div className="Images-Collection">
@@ -48,7 +56,7 @@ export default class ImageMenu extends Component {
             </div>
             <div className="Images-Right-Bar">
                 { this.renderSelected() }
-                <button className="Images-New-Button">New image</button>
+                <button className="Images-New-Button" onClick={this.toCreateImageMenu}>Upload image</button>
             </div>
         </Fragment>);
     }
