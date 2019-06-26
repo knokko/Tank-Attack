@@ -18,9 +18,10 @@ export default class ImageMenu extends Component {
     }
 
     showOnReady(callback){
-        ImageManager.getImageIDS(ProfileManager.getSelectedProfile().id, imageIDs => {
+        // TODO Move this stuff to componentDidMount or find another solution
+        ImageManager.getImageIDS(ProfileManager.getSelectedProfile().id, this, imageIDs => {
             if (imageIDs === null){
-                this.state = {images: null, selectedImage: null};
+                this.setState({images: null, selectedImage: null});
                 callback(this);
             } else {
                 const length = imageIDs.length;
@@ -38,7 +39,7 @@ export default class ImageMenu extends Component {
                         imageComponents[keepIndex].setUserImage(userImage);
                     });
                 }
-                this.state = {images: imageComponents, selectedImage: null};
+                this.setState({images: imageComponents, selectedImage: null});
                 callback(this);
             }
         });

@@ -13,7 +13,8 @@ export default class CollectionMenu extends Component {
         };
 
         // TODO Add the other body components
-        this.imagesBodyComponent = new ImageBody({collectionMenu: this});
+        //this.imagesBodyComponent = new ImageBody({collectionMenu: this});
+        this.imagesBodyComponent = <ImageBody collectionMenu={this} />;
         this.tilesBodyComponent = <Fragment>Tiles body</Fragment>;
         this.levelsBodyComponent = <Fragment>Levels body</Fragment>;
         this.projectilesBodyComponent = <Fragment>Projectiles body</Fragment>;
@@ -51,8 +52,8 @@ export default class CollectionMenu extends Component {
         return <button 
             className="Collection-Upper-Button"
             onClick={_ => {
-                this[text + 'BodyComponent'].showOnReady(this.setBodyComponent);
-                //this.setBodyComponent(this[text + 'BodyComponent']);
+                //this[text + 'BodyComponent'].showOnReady(this.setBodyComponent);
+                this.setBodyComponent(this[text + 'BodyComponent']);
             }}
         >{ text.charAt(0).toUpperCase() + text.substring(1) }</button>;
     }
