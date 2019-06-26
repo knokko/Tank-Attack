@@ -1,5 +1,5 @@
 import { requestImage, requestImageIDs } from '../connection/sending/Image';
-import UserImage, { createImage } from '../image/UserImage';
+import { createImage } from '../image/UserImage';
 
 /**
  * This is the class of the image manager. It is not public because there should only be created 1 instance of it,
@@ -24,32 +24,40 @@ class ImageManager {
      * single parameter of type UserImage.
      */
     getUserImage(imageID, onLoad){
-        let userImage = this.imageMap.get(imageID);
-        if (userImage === undefined){
+        let userImageState = this.imageMap.get(imageID);
+        if (userImageState === undefined){
+            userImageState = new ResourceState(onLoad);
+            this.imageMap.set(imageID, userImageState);
             requestImage(imageID, (pixelData, width, height) => {
                 createImage(pixelData, width, height, userImage => {
-                    this.imageMap.set(imageID, userImage);
-                    onLoad(userImage);
+                    userImageState.setResource(userImage);
                 });
             }, fallbackImage => {
-                userImage = new UserImage(fallbackImage);
-                this.imageMap.set(imageID, userImage);
-                onLoad(userImage);
+                userImageState.setResource(fallbackImage);
             });
         } else {
-            onLoad(userImage);
+            userImageState.addCallback(onLoad);
         }
     }
 
+    /**
+     * Gets or loads all ids of images owned by the user with the given userID. Note that this method doesn't
+     * return anything despite the name, it only calls the callback function once the image ids have been
+     * obtained.
+     * @param {number} userID The id of the user to get the image ids of
+     * @param {Function} callback The function to be called when the image ids have been obtained. It should
+     * take a single parameter that is an array of numbers
+     */
     getImageIDS(userID, callback){
-        let ids = this.usersMap.get(userID);
-        if (ids === undefined){
+        let idsState = this.usersMap.get(userID);
+        if (idsState === undefined){
+            idsState = new ResourceState(callback);
+            this.usersMap.set(userID, idsState);
             requestImageIDs(userID, ids => {
-                this.usersMap.set(userID, ids);
-                callback(ids);
+                idsState.setResource(ids);
             });
         } else {
-            callback(ids);
+            idsState.addCallback(callback);
         }
     }
 }
@@ -61,3 +69,27 @@ class ImageManager {
 const Instance = new ImageManager();
 
 export default Instance;
+
+class ResourceState {
+
+    constructor(firstCallback){
+        this.resource = null;
+        this.callbacks = [firstCallback];
+    }
+
+    setResource(resource){
+        this.resource = resource;
+        for (let index = 0; index < this.callbacks.length; index++){
+            this.callbacks[index](resource);
+        }
+        this.callbacks = null;
+    }
+
+    addCallback(callback){
+        if (this.callbacks === null){
+            callback(this.resource);
+        } else {
+            this.callbacks.push(callback);
+        }
+    }
+}

@@ -7,16 +7,20 @@ export default class CollectionMenu extends Component {
     constructor(props){
         super(props);
         this.state = {
-            bodyComponent: <Fragment />
+            bodyComponent: {
+                render: () => { return null; }
+            }
         };
 
         // TODO Add the other body components and create a class for the images component
-        this.imagesBodyComponent = <ImageBody />;
+        this.imagesBodyComponent = new ImageBody();
         this.tilesBodyComponent = <Fragment>Tiles body</Fragment>;
         this.levelsBodyComponent = <Fragment>Levels body</Fragment>;
         this.projectilesBodyComponent = <Fragment>Projectiles body</Fragment>;
         this.playersBodyComponent = <Fragment>Players body</Fragment>;
         this.enemiesBodyComponent = <Fragment>Enemies body</Fragment>;
+
+        this.setBodyComponent = this.setBodyComponent.bind(this);
     }
 
     setBodyComponent(newBodyComponent){
@@ -38,7 +42,7 @@ export default class CollectionMenu extends Component {
                 <button className="Collection-Back-Button" onClick={gameState.clickCollectionBack}>Back</button>
             </div>
             <div className="Collection-Body">
-                { this.state.bodyComponent }
+                { this.state.bodyComponent.render() }
             </div>
         </div>);
     }

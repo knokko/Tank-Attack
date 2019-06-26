@@ -1,7 +1,5 @@
 import { requestImageMetaData } from '../connection/sending/Image';
 
-const bufferCanvas = document.createElement('canvas');
-
 /**
  * Represents a user-created image. Please do not access the properties of instances of this call directly, but only call its methods.
  */
@@ -10,12 +8,38 @@ export default class UserImage {
     /**
      * Creates a new UserImage instance from the given Image and time. You should probably not call this constructor
      * directly, but use ImageManager.getUserImage(imageID) instead.
-     * @param {Image} image The image
+     * @param {HTMLCanvasElement} image The image
      */
     constructor(image, id){
         this.image = image;
         this.id = id;
         this.meta = null;
+        this.changeListeners = [];
+        this.metaChangeListeners = [];
+    }
+
+    /**
+     * Changes the image of this UserImage and notifies all change listeners.
+     * This method should only be called from the ImageManager.
+     * @param {HTMLCanvasElement} newImage The new image of this UserImage
+     */
+    changeImage(newImage){
+        this.image = newImage;
+        for (let index = 0; index < this.changeListeners.length; index++){
+            this.changeListeners[index].callback(this);
+        }
+    }
+
+    /**
+     * Changes the metadata of this UserImage and notifies all change listeners.
+     * This method should only be called from the ImageManager.
+     * @param {MetaData} newMeta The new metadata of this image
+     */
+    changeMeta(newMeta){
+        this.meta = newMeta;
+        for (let index = 0; index < this.metaChangeListeners.length; index++){
+            this.metaChangeListeners[index].callback(this, newMeta);
+        }
     }
 
     /**
@@ -30,6 +54,32 @@ export default class UserImage {
     draw(canvas, offsetX = 0, offsetY = 0, width = canvas.width, height = canvas.height){
         const ctx = canvas.getContext('2d');
         ctx.drawImage(this.image, offsetX, offsetY, width, height);
+    }
+
+    addChangeListener(listener, onChange){
+        this.changeListeners.push(new ChangeListener(listener, onChange));
+    }
+
+    removeChangeListener(listener){
+        for (let index = 0; index < this.changeListeners.length; index++){
+            if (this.changeListeners[index].listener === listener){
+                this.changeListeners.splice(index, 1);
+                index--;
+            }
+        }
+    }
+
+    addMetaChangeListener(listener, onChange){
+        this.metaChangeListeners.push(new ChangeListener(listener, onChange));
+    }
+
+    removeMetaChangeListener(listener){
+        for (let index = 0; index < this.metaChangeListeners.length; index++){
+            if (this.metaChangeListeners[index].listener === listener){
+                this.metaChangeListeners.splice(index, 1);
+                index--;
+            }
+        }
     }
 
     /**
@@ -51,9 +101,12 @@ export default class UserImage {
      */
     getMetaData(callback){
         if (this.meta === null){
-            requestImageMetaData(this.id, callback);
+            requestImageMetaData(this.id, meta => {
+                this.meta = meta;
+                callback(meta);
+            });
         } else {
-            callback(meta);
+            callback(this.meta);
         }
     }
 }
@@ -64,36 +117,25 @@ export default class UserImage {
  * @param {Uint8Array} pixelData A Uint8(Clamped)Array containing the pixel data in RGBA order.
  * @param {number} width The width of the image
  * @param {number} height The height of the image
- * @param {Function} onReady The function to be called when the image is ready. It should have a single parameter of type UserImage
- * @return {UserImage} The UserImage that was created. It may or may not be loaded when this function returns!
+ * @param {Function} onReady The function to be called when the (user)image is ready. It should have a single parameter of type UserImage
  */
 export function createImage(pixelData, width, height, onReady){
     if (4 * width * height !== pixelData.length){
-        throw 'pixelDataLength is ' + pixelData.length + ', but width is ' + width + ' and height is ' + height;
+        throw new Error('pixelDataLength is ' + pixelData.length + ', but width is ' + width + ' and height is ' + height);
     }
-    if (width !== bufferCanvas.width || height !== bufferCanvas.height){
-        bufferCanvas.width = width;
-        bufferCanvas.height = height;
-    }
-    const imageData = bufferCanvas.createImageData(width, height);
-    const imageDataBuffer = imageData.data;
-    const length = pixelData.length;
-    for (let index = 0; index < length; index++){
-        imageDataBuffer[index] = pixelData[index];
-    }
-    bufferCanvas.putImageData(imageData, 0, 0);
-    const image = new Image(width, height);
-    const userImage = new UserImage(image);
-    image.onload = _ => {
-        userImage.isLoading = false;
-        onReady();
-    };
-    image.src = bufferCanvas.toDataURL();
-    return userImage;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(width, height);
+    imageData.data.set(pixelData);
+    ctx.putImageData(imageData, 0, 0);
+    const userImage = new UserImage(canvas);
+    onReady(userImage);
 }
 
 /**
- * Represents the metadata of an UserImage. It contains a name, private flag, lastModified and createdAt. These 4 properties
+ * Represents the metadata of an UserImage. It contains a name, isPrivate, lastModified and createdAt. These 4 properties
  * can be accessed directly. However, the isVisible() method should be called before attempting to access any of them. If that
  * returns false, the metadata is not available and the values of the 4 properties are not defined.
  * 
@@ -104,14 +146,14 @@ export class MetaData {
     /**
      * Constructs a new MetaData instance. This constructor should only be called from the requestImageMetaData function!
      * @param {string} name 
-     * @param {boolean} private 
+     * @param {boolean} isPrivate
      * @param {boolean} exists 
      * @param {number} lastModified 
      * @param {number} createdAt 
      */
-    constructor(name, private, exists, lastModified, createdAt){
+    constructor(name, isPrivate, exists, lastModified, createdAt){
         this.name = name;
-        this.private = private;
+        this.isPrivate = isPrivate;
         this.exists = exists;
         this.lastModified = lastModified;
         this.createdAt = createdAt;
@@ -123,5 +165,13 @@ export class MetaData {
      */
     isVisible(){
         return this.name !== null;
+    }
+}
+
+class ChangeListener {
+
+    constructor(listener, callback){
+        this.listener = listener;
+        this.callback = callback;
     }
 }

@@ -2,7 +2,7 @@
 .Images-Collection {
     position: absolute;
     left: 0;
-    top: 15vh;
+    top: 0;
     width: 85vw;
     height: 85vh;
 }
@@ -10,7 +10,7 @@
 .Images-Right-Bar {
     position: absolute;
     right: 0;
-    top: 15vh;
+    top: 0;
     width: 15vw;
     height: 85vh;
     background-color: rgb(200,50,50);
