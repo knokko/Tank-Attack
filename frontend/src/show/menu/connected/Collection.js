@@ -7,9 +7,7 @@ export default class CollectionMenu extends Component {
     constructor(props){
         super(props);
         this.state = {
-            bodyComponent: {
-                render: () => { return null; }
-            }
+            bodyComponent: null
         };
 
         // TODO Add the other body components
@@ -43,7 +41,7 @@ export default class CollectionMenu extends Component {
                 <button className="Collection-Back-Button" onClick={gameState.clickCollectionBack}>Back</button>
             </div>
             <div className="Collection-Body">
-                { this.state.bodyComponent.render() }
+                { this.state.bodyComponent }
             </div>
         </div>);
     }

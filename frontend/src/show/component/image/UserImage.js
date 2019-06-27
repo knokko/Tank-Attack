@@ -7,19 +7,23 @@ export default class UserImage extends Component {
         super(props);
         this.userImage = null;
         this.canvasRef = React.createRef();
+
+        this.handleClick = this.handleClick.bind(this);
     }
 
-    onImageInit(){
-        this.userImage.draw(this.canvasRef.current);
-        this.userImage.addChangeListener(this, userImage => {
-            userImage.draw(this.canvasRef.current);
-        });
+    handleClick(_event){
+        if (this.userImage !== null){
+            this.props.onClick(this.userImage);
+        }
     }
 
     componentDidMount(){
         ImageManager.getUserImage(this.props.imageID, this, userImage => {
             this.userImage = userImage;
-            this.onImageInit();
+            this.userImage.draw(this.canvasRef.current);
+            this.userImage.addChangeListener(this, userImage => {
+                userImage.draw(this.canvasRef.current);
+            });
         });
     }
 
@@ -31,15 +35,19 @@ export default class UserImage extends Component {
         }
     }
 
-    setUserImage(userImage){
-        this.userImage = userImage;
-        this.onImageInit();
-    }
-
     render(){
         return (
-            <canvas className="UserImageCanvas" ref={this.canvasRef} 
-            style={"left: " + this.props.x + "; top: " + this.props.y + "; width: " + this.props.width + "; height: " + this.props.height + ";"}/>
+            <canvas 
+                className="UserImageCanvas" 
+                ref={this.canvasRef}
+                onClick={this.handleClick}
+                style={{
+                    left: this.props.x,
+                    top: this.props.y,
+                    width: this.props.width,
+                    height: this.props.height
+                }}
+            />
         );
     }
 }

@@ -100,30 +100,30 @@ export default Instance;
 
 class ResourceState {
 
-    constructor(firstListener, firstsCallback){
+    constructor(firstListener, firstCallback){
         this.resource = null;
         this.callbackPairs = [new ListenerPair(firstListener, firstCallback)];
     }
 
     setResource(resource){
         this.resource = resource;
-        for (let index = 0; index < this.callbacks.length; index++){
-            this.callbacks[index].callback(resource);
+        for (let index = 0; index < this.callbackPairs.length; index++){
+            this.callbackPairs[index].callback(resource);
         }
-        this.callbacks = null;
+        this.callbackPairs = null;
     }
 
     addCallback(listener, callback){
-        if (this.callbacks === null){
+        if (this.callbackPairs === null){
             callback(this.resource);
         } else {
-            this.callbacks.push(new ListenerPair(listener, callback));
+            this.callbackPairs.push(new ListenerPair(listener, callback));
         }
     }
 
     removeCallback(listener){
-        if (this.callbacks !== null){
-            const callbacks = this.callbacks;
+        if (this.callbackPairs !== null){
+            const callbacks = this.callbackPairs;
             const length = callbacks.length;
             for (let index = 0; index < length; index++){
                 if (callbacks[index].listener === listener){

@@ -19,7 +19,7 @@
 .Image-Create-Label {
     color: rgb(0, 0, 0);
     position: absolute;
-    left: 15vw;
+    left: 25vw;
     font-size: 5vh;
 }
 
@@ -27,15 +27,14 @@
     color: rgb(50,150,200);
     background-color: rgb(200,200,100);
     position: absolute;
-    left: 45vw;
+    left: 35vw;
     font-size: 5vh;
 }
 
 .Image-Create-File-Input {
     position: absolute;
-    left: 45vw;
-    background-color: blue;
-    color: red;
+    left: 35vw;
+    font-size: 5vh;
 }
 
 .Image-Create-Upload {
@@ -53,6 +52,13 @@
     color: red;
     font-size: 5vh;
     position: absolute;
-    left: 20vw;
-    top: 5vh;
+    left: 30vw;
+    top: 4vh;
+}
+
+.Image-Create-Info {
+    font-size: 5vh;
+    position: absolute;
+    left: 30vw;
+    top: 4vh;
 }

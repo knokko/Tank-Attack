@@ -7,82 +7,80 @@ import './Images.css';
 
 export default class ImageMenu extends Component {
 
-    constructor(props){
+    constructor(props) {
         super(props);
         this.state = {
-            images: null,
+            imageIDs: null,
             selectedImage: null
         };
 
         this.toCreateImageMenu = this.toCreateImageMenu.bind(this);
     }
 
-    showOnReady(callback){
-        // TODO Move this stuff to componentDidMount or find another solution
+    componentDidMount() {
         ImageManager.getImageIDS(ProfileManager.getSelectedProfile().id, this, imageIDs => {
-            if (imageIDs === null){
-                this.setState({images: null, selectedImage: null});
-                callback(this);
-            } else {
-                const length = imageIDs.length;
-                const imageComponents = new Array(length);
-                for (let index = 0; index < length; index++){
-                    imageComponents[index] = new UserImageComponent({
-                        x: (10 + 15 * (index % 5)) + 'vw',
-                        y: (10 + 15 * Math.floor(index / 5)) + 'vh',
-                        width: '10',
-                        height: '10',
-                        userImage: null
-                    });
-                    const keepIndex = index;
-                    ImageManager.getUserImage(imageIDs[index], userImage => {
-                        imageComponents[keepIndex].setUserImage(userImage);
-                    });
-                }
-                this.setState({images: imageComponents, selectedImage: null});
-                callback(this);
-            }
+            this.setState({ imageIDs: imageIDs, selectedImage: null });
         });
     }
 
-    toCreateImageMenu(){
-        const collectionMenu = this.props.collectionMenu;
-        collectionMenu.setBodyComponent(new CreateImageMenu({collectionMenu: collectionMenu, imagesMenu: this}));
+    componentWillUnmount() {
+        if (this.state.imageIDs === null) {
+            ImageManager.cancelGetImageIDs(ProfileManager.getSelectedProfile().id, this);
+        }
     }
 
-    render(){
+    toCreateImageMenu() {
+        const collectionMenu = this.props.collectionMenu;
+        collectionMenu.setBodyComponent(<CreateImageMenu collectionMenu={collectionMenu} />);
+    }
+
+    render() {
         return (<Fragment>
             <div className="Images-Collection">
-               { this.renderImages() }
+                {this.renderImages()}
             </div>
             <div className="Images-Right-Bar">
-                { this.renderSelected() }
+                {this.renderSelected()}
                 <button className="Images-New-Button" onClick={this.toCreateImageMenu}>Upload image</button>
             </div>
         </Fragment>);
     }
 
-    renderImages(){
-        const images = this.state.images;
-        const length = images.length;
-        if (length === 0){
-            return "You don't have any images yet.";
-        } else {
-            const result = new Array(length);
-            for (let index = 0; index < length; index++){
-                result[index] = images[index].render();
+    renderImages() {
+        const imageIDs = this.state.imageIDs;
+        if (imageIDs !== null) {
+            const length = imageIDs.length;
+            if (length === 0) {
+                return "You don't have any images yet.";
+            } else {
+                const result = new Array(length);
+                for (let index = 0; index < length; index++) {
+                    const imageID = imageIDs[index];
+                    result[index] = <UserImageComponent
+                        x={(10 + 15 * (index % 5)) + 'vw'}
+                        y={(10 + 15 * Math.floor(index / 5)) + 'vh'}
+                        width="10vw"
+                        height="10vh"
+                        imageID={imageID}
+                        onClick={userImage => {
+                            this.setState({ selectedImage: userImage });
+                        }}
+                    />;
+                }
+                return result;
             }
-            return result;
+        } else {
+            return "Loading images...";
         }
     }
 
-    renderSelected(){
-        if (this.state.selectedImage !== null){
+    renderSelected() {
+        if (this.state.selectedImage !== null) {
             return <Fragment>
-                Hm...
+                You selected the image with id {this.state.selectedImage.getID()}
             </Fragment>
         } else {
-            return null;
+            return "No image selected";
         }
     }
 }
