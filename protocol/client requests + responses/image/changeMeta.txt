@@ -9,6 +9,9 @@ The server will send the following response:
 true (as boolean)
 SUCCESS or UNAUTHORIZED or NO_IMAGE (as sized uint of size CHANGE_META_CODE_BITS)
 
+Additionally, the server will broadcast a message to all currently connected clients (except the client that sent this request)
+that the metadata of the image has changed. If clients are interested in the changes, they can send a getMeta request to the backend.
+
 CTS_CODE_BITS = 2
 CODE_IMAGE = 2
 IMAGE_CODE_BITS = 3

@@ -1,0 +1,11 @@
+When a user changes an image, all connected clients except the client that made the change will get the following message:
+false (as boolean)
+CODE_IMAGE (as sized uint of size STC_CODE_BITS)
+IMAGE_CHANGE_PIXELS (as sized uint of size IMAGE_CODE_BITS)
+The id of the changed image (as var uint)
+
+CODE_IMAGE = 0
+STC_CODE_BITS = 1
+
+IMAGE_CHANGE_PIXELS = 1
+IMAGE_CODE_BITS = 2

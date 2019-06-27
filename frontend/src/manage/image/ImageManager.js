@@ -1,5 +1,5 @@
 import { requestImage, requestImageIDs } from '../connection/sending/Image';
-import { createImage } from '../image/UserImage';
+import UserImage, { createImage, MetaData } from '../image/UserImage';
 
 /**
  * This is the class of the image manager. It is not public because there should only be created 1 instance of it,
@@ -10,6 +10,24 @@ class ImageManager {
     constructor(){
         this.imageMap = new Map();
         this.usersMap = new Map();
+        this.userImageListenMap = new Map();
+    }
+
+    /**
+     * Registers an image that this user just uploaded. This method directly puts the image and its metadata in the
+     * image map of this ImageManager and thereby avoids fetching the data we already have from the server.
+     * @param {number} imageID The id of the newly created image, as returned by the backend
+     * @param {HTMLCanvasElement} imageCanvas The canvas containing the image data
+     * @param {string} name The name of the image
+     * @param {boolean} isPrivate Whether or not the image is private
+     * @param {number} createdAt The time the image was created at, as returned by the backend
+     */
+    registerUploadedImage(imageID, imageCanvas, name, isPrivate, createdAt){
+        const userImageState = new ResourceState(null, null);
+        const userImage = new UserImage(imageCanvas, imageID);
+        userImage.meta = new MetaData(name, isPrivate, true, createdAt, createdAt);
+        userImageState.resource = userImage;
+        userImageState.callbackPairs = null;
     }
 
     /**
@@ -69,12 +87,35 @@ class ImageManager {
         if (idsState === undefined){
             idsState = new ResourceState(listener, callback);
             this.usersMap.set(userID, idsState);
+            this.userImageListenMap.set(userID, new ChangeListeners());
             requestImageIDs(userID, ids => {
                 idsState.setResource(ids);
             });
         } else {
             idsState.addCallback(listener, callback);
         }
+    }
+
+    /**
+     * Determines whether or not this client is interested in updates about the image ids of the user with
+     * the given userID. If so, this client should ask for the new image ids whenever the server notifies
+     * it that the image ids of the given user with the given userID have changed.
+     * @param {number} userID The id of the user
+     */
+    shouldFollowUserImageIDs(userID){
+        return this.userImageListenMap.get(userID) !== undefined;
+    }
+
+    updateUserImageIDs(userID, newImageIDs){
+        this.userImageListenMap.get(userID).notifyListeners(newImageIDs);
+    }
+
+    listenUserImageIDs(userID, listener, onChange){
+        this.userImageListenMap.get(userID).addListener(listener, onChange);
+    }
+
+    stopListenUserImageIDs(userID, listener){
+        this.userImageListenMap.get(userID).removeListener(listener);
     }
 
     /**
@@ -124,12 +165,49 @@ class ResourceState {
     removeCallback(listener){
         if (this.callbackPairs !== null){
             const callbacks = this.callbackPairs;
-            const length = callbacks.length;
+            let length = callbacks.length;
             for (let index = 0; index < length; index++){
                 if (callbacks[index].listener === listener){
                     callbacks.splice(index, 1);
                     index--;
+                    length--;
                 }
+            }
+        }
+    }
+}
+
+class ChangeListeners {
+
+    constructor(){
+        this.pairs = [];
+    }
+
+    notifyListeners(newValue){
+        const pairs = this.pairs;
+        const length = pairs.length;
+        for (let index = 0; index < length; index++){
+            pairs[index].callback(newValue);
+        }
+    }
+
+    addListener(listener, onChange){
+        console.log('pairs are', this.pairs);
+        this.pairs.push(new ListenerPair(listener, onChange));
+        console.log('pairs became', this.pairs);
+    }
+
+    removeListener(listener){
+        const pairs = this.pairs;
+        let length = pairs.length;
+        console.log('pairs are now', pairs);
+        console.log('length is', length);
+        for (let index = 0; index < length; index++){
+            console.log('index is ' + index + ' and length is ' + index);
+            if (pairs[index].listener === listener){
+                pairs.splice(index, 1);
+                index--;
+                length--;
             }
         }
     }

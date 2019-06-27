@@ -11,6 +11,9 @@ SUCCESS (as sized uint of size COPY_CODE_BITS)
 The id of the destination image (as var uint)
 The createdAt of the destination image (number of milliseconds between exact moment of creation and Epoch, as var uint)
 
+Additionally, the server will broadcast a message to all currently connected clients (except the client that sent this request)
+that the image ids of the client user have changed. If the other clients are interested, they should send an ids request.
+
 If the copy failed, the server will send the following response:
 true (as boolean)
 IO_ERROR_READ or IO_ERROR_WRITE or UNAUTHORIZED or NO_IMAGE or MANY_TOTAL or MANY_YOU (as sized uint of size COPY_CODE_BITS)

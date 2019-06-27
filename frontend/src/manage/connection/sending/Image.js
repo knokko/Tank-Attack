@@ -1,9 +1,10 @@
 import { CODE_IMAGE } from '../protocol/CtS';
 import { 
     CODE_IMAGE_GET_PIXELS, 
-    CODE_IMAGE_BITCOUNT, 
     CODE_IMAGE_GET_META ,
-    CODE_IMAGE_IDS
+    CODE_IMAGE_IDS,
+    CODE_IMAGE_UPLOAD,
+    CODE_IMAGE_BITCOUNT
 } from '../protocol/cts/Image';
 import { 
     GET_PIXELS_SUCCESS, 
@@ -23,7 +24,16 @@ import {
     IDS_NO_ACCOUNT,
     IDS_BITCOUNT
 } from '../protocol/stc/image/Ids';
+import {
+    UPLOAD_SUCCESS,
+    UPLOAD_IO_ERROR,
+    UPLOAD_LONG_NAME,
+    UPLOAD_MANY_TOTAL,
+    UPLOAD_MANY_YOU,
+    UPLOAD_BITCOUNT
+} from '../protocol/stc/image/Upload';
 import ConnectionManager from '../Manager';
+import ImageManager from '../../image/ImageManager';
 import { MetaData } from '../../image/UserImage';
 
 export function requestImage(imageID, onSuccess, onFail){
@@ -96,5 +106,59 @@ export function requestImageIDs(userID, callback){
     });
     output.writeNumber(CODE_IMAGE_IDS, CODE_IMAGE_BITCOUNT, false);
     output.writeVarUint(userID);
+    output.terminate();
+}
+
+function toSignedByte(unsigned){
+    if (unsigned > 127){
+        return unsigned - 256;
+    } else {
+        return unsigned;
+    }
+}
+
+/**
+ * Attempts to upload an image to the backend. If it succeeds, the image will also be registered to the
+ * ImageManager.
+ * @param {HTMLCanvasElement} canvas The canvas containing the image data
+ * @param {string} name The name of the image to upload
+ * @param {boolean} isPrivate Whether or not the image should be private
+ * @param {Function} onSuccess The function to be called once the upload succeeded. It should
+ * have a single parameter that will be the id of the uploaded image.
+ * @param {Function} onFail  The function to be called when the upload fails. It should have
+ * a single parameter that will be a string describing the error message.
+ */
+export function uploadImage(canvas, name, isPrivate, onSuccess, onFail){
+    const output = ConnectionManager.createOutput(CODE_IMAGE, input => {
+        const responseCode = input.readNumber(UPLOAD_BITCOUNT, false);
+        if (responseCode === UPLOAD_SUCCESS){
+            const imageID = input.readVarUint();
+            const createdAt = input.readVarUint();
+            ImageManager.registerUploadedImage(imageID, canvas, name, isPrivate, createdAt);
+            onSuccess(imageID);
+        } else if (responseCode === UPLOAD_IO_ERROR){
+            onFail("The server couldn't save your image.");
+        } else if (responseCode === UPLOAD_LONG_NAME){
+            onFail("The name of your image is too long.");
+        } else if (responseCode === UPLOAD_MANY_TOTAL){
+            onFail("The maximum number of images has been reached.");
+        } else if (responseCode === UPLOAD_MANY_YOU){
+            onFail("You reached the maximum number of images for your account.")
+        } else {
+            onFail("Unknown response code");
+        }
+    });
+    output.writeNumber(CODE_IMAGE_UPLOAD, CODE_IMAGE_BITCOUNT);
+    output.writeBoolean(isPrivate);
+    output.writeString(name);
+    output.writeByte(toSignedByte(canvas.width - 1));
+    output.writeByte(toSignedByte(canvas.height - 1));
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const rgbaData = imageData.data;
+    const length = rgbaData.length;
+    for (let index = 0; index < length; index++){
+        output.writeByte(toSignedByte(rgbaData[index]));
+    }
     output.terminate();
 }

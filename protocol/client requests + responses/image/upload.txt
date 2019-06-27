@@ -13,6 +13,13 @@ SUCCESS (as sized uint of size UPLOAD_CODE_BITS)
 The id of the new image (as var uint)
 The createdAt time of the image (as var uint)
 
+Additionally, the server will broadcast a message to all currently connected clients (except the client that sent this request)
+that the image ids of the client user have changed. If the other clients are interested, they should send an ids request.
+The message should contain the following:
+false (as boolean)
+STC_CODE_IMAGE (as sized uint of size STC_CODE_BITS)
+// TODO Maybe use different codes for uploading (or copying) and deleting
+
 If the upload was not successful, the server will send the following response:
 true (as boolean)
 IO_ERROR or LONG_NAME or MANY_TOTAL or MANY_YOU (1 of them as sized uint of size UPLOAD_CODE_BITS)

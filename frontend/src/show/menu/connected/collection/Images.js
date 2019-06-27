@@ -14,18 +14,29 @@ export default class ImageMenu extends Component {
             selectedImage: null
         };
 
+        this.userID = ProfileManager.getSelectedProfile().id;
+
         this.toCreateImageMenu = this.toCreateImageMenu.bind(this);
     }
 
     componentDidMount() {
-        ImageManager.getImageIDS(ProfileManager.getSelectedProfile().id, this, imageIDs => {
+        ImageManager.getImageIDS(this.userID, this, imageIDs => {
             this.setState({ imageIDs: imageIDs, selectedImage: null });
+            ImageManager.listenUserImageIDs(this.userID, this, newImageIDs => {
+                if (this.state.selectedImage !== null && !newImageIDs.includes(this.state.selectedImage.getID())){
+                    this.setState({ imageIDs: newImageIDs, selectedImage: null});
+                } else {
+                    this.setState({ imageIDs: newImageIDs});
+                }
+            })
         });
     }
 
     componentWillUnmount() {
         if (this.state.imageIDs === null) {
             ImageManager.cancelGetImageIDs(ProfileManager.getSelectedProfile().id, this);
+        } else {
+            ImageManager.stopListenUserImageIDs(this.userID, this);
         }
     }
 

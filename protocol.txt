@@ -12,3 +12,6 @@ by the client that was not yet responded to. Then there is no additional header,
 -If it is false, the message is not a response to a client message, but the server informs the client that something changed.
 Then, the first byte denotes the message type (currently, there are no such messages, but they will be added as soon as
 actual multiplayer comes in or multiple people are building something together). The rest of the message is then the payload.
+
+The folder 'client requests + responses' contains the protocols for the client to server messages and the corresponding server response.
+The folder 'server updates' contains the protocols for messages from server to client that are not a responses to requests of that client.

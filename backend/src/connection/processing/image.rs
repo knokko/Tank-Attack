@@ -62,6 +62,8 @@ fn process_image_upload(
                     let image_add_enum_result = image_add_result.unwrap();
                     match image_add_enum_result {
                         SUCCESS(image_id, created_at) => {
+                            // TODO Broadcast that the image ids of the client have changed
+                            let trigger_warning = true;
                             image::upload::send_success(socket, image_id, created_at)?;
                             Ok(())
                         }
@@ -109,6 +111,9 @@ fn process_image_change_pixels(
                 let result = image.set_data(ImageData::from_bits(input)?);
                 if result.is_ok() {
                     image::change_pixels::send_success(socket)?;
+
+                    // TODO Do NOT send the message to the client that sent the request!
+                    let trigger_warning = true;
                     image::broadcast_changed_pixels(Arc::clone(&app), image_id as ImageID);
                     Ok(())
                 } else {
@@ -187,6 +192,8 @@ fn process_image_change_meta(
                 if maybe_new_name.is_some() {
                     image.set_private(new_private);
                     image.set_name(maybe_new_name.unwrap());
+                    // TODO Broadcast that the metadata of this image changed
+                    let trigger_warning = true;
                     image::change_meta::send_success(socket)?;
                     Ok(())
                 } else {
@@ -275,6 +282,8 @@ fn process_image_copy(
                             let enum_add_result = image_add_result.unwrap();
                             match enum_add_result {
                                 SUCCESS(image_id, created_at) => {
+                                    // TODO Broadcast that the image ids of the client have changed
+                                    let trigger_warning = true;
                                     image::copy::send_success(socket, image_id, created_at)?;
                                     Ok(())
                                 }

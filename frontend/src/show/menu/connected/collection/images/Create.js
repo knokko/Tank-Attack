@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './Create.css';
+import { uploadImage } from '../../../../../manage/connection/sending/Image';
 
 export default class CreateImage extends Component {
 
@@ -32,7 +33,30 @@ export default class CreateImage extends Component {
     upload(){
         const file = this.fileInputRef.current.files[0];
         if (file !== undefined){
-            this.setInfo('Uploading file ' + file.name);
+            const image = new Image();
+            const reader = new FileReader();
+            reader.addEventListener('load', () => {
+
+                // TODO Also add an error event
+                image.onload = () => {
+                    const imageCanvas = document.createElement('canvas');
+                    imageCanvas.width = image.width;
+                    imageCanvas.height = image.height;
+                    const ctx = imageCanvas.getContext('2d');
+                    ctx.drawImage(image, 0, 0);
+
+                    // TODO Add checkbox for private instead of hardcoding false
+                    // TODO And retrieve the name instead of hardcoding "temp name"
+                    uploadImage(imageCanvas, "temp name", false, () => {
+                        this.goBack();
+                    }, reason => {
+                        this.setError(reason);
+                    });
+                    this.setInfo('Uploading file ' + file.name);
+                };
+                image.src = reader.result;
+            }, false);
+            reader.readAsDataURL(file);
         } else {
             this.setError('Please select a file first');
         }
