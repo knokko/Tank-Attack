@@ -5,7 +5,7 @@ mod connection;
 mod data;
 mod input;
 
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 use crate::connection::manager::ConnectionManager;
 use crate::data::account::manager::AccountManager;
@@ -20,15 +20,15 @@ fn main() {
     let image_manager = ImageManager::init(&mut account_manager);
 
     let application = Arc::new(ServerApp {
-        connection_manager: Mutex::new(None),
-        account_manager: Mutex::new(account_manager),
-        image_manager: Mutex::new(image_manager),
+        connection_manager: RwLock::new(None),
+        account_manager: RwLock::new(account_manager),
+        image_manager: RwLock::new(image_manager),
         secure_random: Box::new(SystemRandom::new()),
         test_counter: Mutex::new(0),
     });
 
     {
-        let mut image_manager = application.image_manager.lock().unwrap();
+        let mut image_manager = application.image_manager.write().unwrap();
         image_manager.set_app_instance(Arc::clone(&application));
     }
 
@@ -38,13 +38,13 @@ fn main() {
     ConnectionManager::listen_until_end(Arc::clone(&application));
 
     println!("Saving account data...");
-    let account_manager = application.account_manager.lock().unwrap();
+    let account_manager = application.account_manager.read().unwrap();
     account_manager.stop();
     drop(account_manager);
     println!("Saved account data");
 
     println!("Saving image data...");
-    let image_manager = application.image_manager.lock().unwrap();
+    let image_manager = application.image_manager.read().unwrap();
     image_manager.stop();
     drop(image_manager);
     println!("Saved image data");
@@ -53,16 +53,17 @@ fn main() {
 }
 
 pub struct ServerApp {
-    connection_manager: Mutex<Option<ConnectionManager>>,
-    account_manager: Mutex<AccountManager>,
-    image_manager: Mutex<ImageManager>,
+    connection_manager: RwLock<Option<ConnectionManager>>,
+    account_manager: RwLock<AccountManager>,
+    image_manager: RwLock<ImageManager>,
     secure_random: Box<SystemRandom>,
     test_counter: Mutex<i8>,
 }
 
 impl ServerApp {
     fn stop_websocket_server(&self) {
-        let connection_manager = self.connection_manager.lock().unwrap();
+        //let connection_manager = self.connection_manager.lock().unwrap();
+        let connection_manager = self.connection_manager.read().unwrap();
         let ref_manager = connection_manager.as_ref();
         if ref_manager.is_some() {
             let result = ref_manager.unwrap().get_server_handle().shutdown();

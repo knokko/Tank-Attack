@@ -12,7 +12,7 @@ pub fn process_register(
     socket: Arc<ws::Sender>,
 ) -> Result<(), FatalProcessError> {
     if !state.is_logged_in() {
-        let mut account_manager = app.account_manager.lock().unwrap();
+        let mut account_manager = app.account_manager.write().unwrap();
         if account_manager.can_create_account() {
             let account_result = account_manager.create_account(app.secure_random.as_ref());
             if account_result.is_ok() {

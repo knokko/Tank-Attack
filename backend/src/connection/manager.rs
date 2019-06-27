@@ -6,6 +6,7 @@ use crate::ServerApp;
 
 use std::cell::RefCell;
 use std::sync::Arc;
+use std::sync::RwLock;
 
 use threadpool::ThreadPool;
 
@@ -20,12 +21,14 @@ impl ws::Factory for ConnectionFactory {
     type Handler = ConnectionHandler;
     
     fn connection_made(&mut self, out: ws::Sender) -> ConnectionHandler {
-        return ConnectionHandler::new(out, Arc::clone(&self.app), RefCell::clone(&self.pool));
+        let connection_handler = ConnectionHandler::new(out, Arc::clone(&self.app), RefCell::clone(&self.pool));
+        connection_handler
     }
 }
 
 pub struct ConnectionManager {
-    server_handle: ws::Sender
+    server_handle: ws::Sender,
+    //connections: RwLock<Vec<ConnectionHandler>>
 }
 
 impl ConnectionManager {
@@ -43,7 +46,7 @@ impl ConnectionManager {
             server_handle: server.broadcaster()
         });
 
-        *app.connection_manager.lock().unwrap() = connection_manager;
+        *app.connection_manager.write().unwrap() = connection_manager;
 
         println!("Opening web socket server");
         let listen_result = server.listen("127.0.0.1:48562");

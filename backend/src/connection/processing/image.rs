@@ -56,7 +56,7 @@ fn process_image_upload(
             let name = maybe_name.unwrap();
             if name.len() <= MAX_IMAGE_NAME_LENGTH {
                 let data = ImageData::from_bits(input)?;
-                let mut image_manager = app.image_manager.lock().unwrap();
+                let mut image_manager = app.image_manager.write().unwrap();
                 let image_add_result = image_manager.add_image(private, name, account_id, data);
                 if image_add_result.is_ok() {
                     let image_add_enum_result = image_add_result.unwrap();
@@ -103,7 +103,7 @@ fn process_image_change_pixels(
     if state.is_logged_in() {
         let account_id = state.get_account_id();
         let image_id = input.read_var_u64()?;
-        let mut image_manager = app.image_manager.lock().unwrap();
+        let mut image_manager = app.image_manager.write().unwrap();
         let maybe_image = image_manager.get_mut_image(image_id as u32);
         if maybe_image.is_some() {
             let image = maybe_image.unwrap();
@@ -144,7 +144,7 @@ fn process_image_get_pixels(
     if state.is_logged_in() {
         let account_id = state.get_account_id();
         let image_id = input.read_var_u64()?;
-        let image_manager = app.image_manager.lock().unwrap();
+        let image_manager = app.image_manager.read().unwrap();
         let maybe_image = image_manager.get_image(image_id as u32);
         if maybe_image.is_some() {
             let requested_image = maybe_image.unwrap();
@@ -182,7 +182,7 @@ fn process_image_change_meta(
     if state.is_logged_in() {
         let account_id = state.get_account_id();
         let image_id = input.read_var_u64()?;
-        let mut image_manager = app.image_manager.lock().unwrap();
+        let mut image_manager = app.image_manager.write().unwrap();
         let maybe_image = image_manager.get_mut_image(image_id as u32);
         if maybe_image.is_some() {
             let image = maybe_image.unwrap();
@@ -223,7 +223,7 @@ fn process_image_get_meta(
     if state.is_logged_in() {
         let account_id = state.get_account_id();
         let image_id = input.read_var_u64()?;
-        let image_manager = app.image_manager.lock().unwrap();
+        let image_manager = app.image_manager.read().unwrap();
         let maybe_image = image_manager.get_image(image_id as u32);
         if maybe_image.is_some() {
             let requested_image = maybe_image.unwrap();
@@ -263,7 +263,7 @@ fn process_image_copy(
             input.read_string(crate::data::image::image::MAX_IMAGE_NAME_LENGTH)?;
         if maybe_new_image_name.is_some() {
             let new_image_name = maybe_new_image_name.unwrap();
-            let mut image_manager = app.image_manager.lock().unwrap();
+            let mut image_manager = app.image_manager.write().unwrap();
 
             let maybe_original_image = image_manager.get_image(original_image_id as u32);
             if maybe_original_image.is_some() {
@@ -331,12 +331,12 @@ fn process_image_ids(
     if state.is_logged_in() {
         let own_account_id = state.get_account_id();
         let owner_account_id = input.read_var_u64()? as u32;
-        let account_manager = app.account_manager.lock().unwrap();
+        let account_manager = app.account_manager.read().unwrap();
         let maybe_owner_account = account_manager.get_account(owner_account_id);
         if maybe_owner_account.is_some() {
             let owner_account = maybe_owner_account.unwrap();
             let image_ids = owner_account.get_image_ids();
-            let image_manager = app.image_manager.lock().unwrap();
+            let image_manager = app.image_manager.read().unwrap();
             let mut visible_image_ids = Vec::with_capacity(image_ids.len());
             for image_id in image_ids {
                 let image = image_manager.get_image(*image_id).unwrap();

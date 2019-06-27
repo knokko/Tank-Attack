@@ -11,7 +11,7 @@ pub fn send(socket: Arc<ws::Sender>, message: Vec<u8>) -> Result<(), ws::Error> 
 }
 
 pub fn broadcast(app: Arc<ServerApp>, message: Vec<u8>) {
-    let should_be_connection_manager = app.connection_manager.lock().unwrap();
+    let should_be_connection_manager = app.connection_manager.read().unwrap();
     match &*should_be_connection_manager {
         Some(connection_manager) => {
             let server_handle = connection_manager.get_server_handle();

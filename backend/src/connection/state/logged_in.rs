@@ -19,7 +19,7 @@ impl LoggedInState {
     }
 
     pub fn on_drop(&self, app: &Arc<ServerApp>) {
-        let mut account_manager = app.account_manager.lock().unwrap();
+        let mut account_manager = app.account_manager.write().unwrap();
         account_manager
             .get_mut_account(self.account_id)
             .unwrap()

@@ -17,7 +17,7 @@ pub fn process_login(
     if !state.is_logged_in() {
         let account_id = input.read_var_u64()? as u32;
         let password = input.read_u8s(PASSWORD_LENGTH)?;
-        let mut account_manager = app.account_manager.lock().unwrap();
+        let mut account_manager = app.account_manager.write().unwrap();
         let maybe_account = account_manager.get_mut_account(account_id);
         if maybe_account.is_some() {
             let account = maybe_account.unwrap();

@@ -110,7 +110,7 @@ impl ImageManager {
         }
         match &self.app {
             Some(app) => {
-                let mut account_manager = app.account_manager.lock().unwrap();
+                let mut account_manager = app.account_manager.write().unwrap();
                 let account = account_manager.get_mut_account(owner_id).unwrap();
                 if account.get_image_ids().len() >= MAX_IMAGES_PER_ACCOUNT {
                     return Ok(AddImageResult::TooManyAccount);
