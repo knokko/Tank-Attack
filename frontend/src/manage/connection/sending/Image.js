@@ -34,29 +34,27 @@ import {
 } from '../protocol/stc/image/Upload';
 import ConnectionManager from '../Manager';
 import ImageManager from '../../image/ImageManager';
-import { MetaData } from '../../image/UserImage';
+import { MetaData, DeletedImageCanvas, IOErrorImageCanvas, PrivateImageCanvas } from '../../image/UserImage';
 
 export function requestImage(imageID, onSuccess, onFail){
+    console.log('request image ' + imageID);
     const output = ConnectionManager.createOutput(CODE_IMAGE, input => {
         const responseCode = input.readNumber(GET_PIXELS_BIT_COUNT, false);
         if (responseCode === GET_PIXELS_SUCCESS){
-            const width = input.readByte() & 0xFF + 1;
-            const height = input.readByte() & 0xFF + 1;
+            const width = (input.readByte() & 0xFF) + 1;
+            const height = (input.readByte() & 0xFF) + 1;
             const length = 4 * width * height;
             const pixels = new Uint8Array(length);
             for (let index = 0; index < length; index++){
                 pixels[index] = input.readByte() & 0xFF;
             }
-            onSuccess(pixels);
+            onSuccess(pixels, width, height);
         } else if (responseCode === GET_PIXELS_IO_ERROR){
-            // TODO maybe inform player?
-            onFail();
+            onFail(IOErrorImageCanvas);
         } else if (responseCode === GET_PIXELS_UNAUTHORIZED){
-            // TODO maybe inform player?
-            onFail();
+            onFail(PrivateImageCanvas);
         } else if (responseCode === GET_PIXELS_NO_IMAGE){
-            // TODO maybe inform player?
-            onFail();
+            onFail(DeletedImageCanvas);
         } else {
             throw new Error('Unexpected getPixels response code: ' + responseCode);
         }
@@ -89,6 +87,7 @@ export function requestImageMetaData(imageID, callback){
 }
 
 export function requestImageIDs(userID, callback){
+    console.log('request image ids of ' + userID);
     const output = ConnectionManager.createOutput(CODE_IMAGE, input => {
         const responseCode = input.readNumber(IDS_BITCOUNT, false);
         if (responseCode === IDS_SUCCESS){
@@ -97,6 +96,8 @@ export function requestImageIDs(userID, callback){
             for (let index = 0; index < amount; index++){
                 ids[index] = input.readVarUint();
             }
+            console.log('image ids of user ' + userID + ' are ');
+            console.log(ids);
             callback(ids);
         } else if (responseCode === IDS_NO_ACCOUNT){
             callback(null);

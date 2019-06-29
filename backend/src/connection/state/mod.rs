@@ -16,6 +16,7 @@ pub struct ConnectionState {
     state: CurrentState,
 
     pub app: Arc<ServerApp>,
+    pub websocket_index: usize
 }
 
 pub enum CurrentState {
@@ -24,10 +25,11 @@ pub enum CurrentState {
 }
 
 impl ConnectionState {
-    pub fn new(app: Arc<ServerApp>) -> ConnectionState {
+    pub fn new(app: Arc<ServerApp>, websocket_index: usize) -> ConnectionState {
         ConnectionState {
             state: CurrentState::Start(StartState::new()),
             app: app,
+            websocket_index: websocket_index
         }
     }
 
@@ -53,6 +55,7 @@ impl ConnectionState {
 
 impl Drop for ConnectionState {
     fn drop(&mut self) {
+        println!("Drop a connection state");
         match &self.state {
             CurrentState::Start(_) => {}
             CurrentState::LoggedIn(state) => state.on_drop(&self.app),

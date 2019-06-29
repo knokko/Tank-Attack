@@ -1,5 +1,6 @@
 import { requestImage, requestImageIDs } from '../connection/sending/Image';
 import UserImage, { createImage, MetaData } from '../image/UserImage';
+import ProfileManager from '../storage/ConnectProfiles';
 
 /**
  * This is the class of the image manager. It is not public because there should only be created 1 instance of it,
@@ -28,6 +29,19 @@ class ImageManager {
         userImage.meta = new MetaData(name, isPrivate, true, createdAt, createdAt);
         userImageState.resource = userImage;
         userImageState.callbackPairs = null;
+        this.addUserImageID(ProfileManager.getSelectedProfile().id, imageID);
+        
+    }
+
+    /**
+     * Only for internal use in ImageManager!
+     * @param {number} userID 
+     * @param {number} newImageID 
+     */
+    addUserImageID(userID, newImageID){
+        const imageIDs = this.usersMap.get(userID).resource;
+        imageIDs.push(newImageID);
+        this.userImageListenMap.get(userID).notifyListeners(imageIDs);
     }
 
     /**
@@ -52,8 +66,8 @@ class ImageManager {
                 createImage(pixelData, width, height, userImage => {
                     userImageState.setResource(userImage);
                 });
-            }, fallbackImage => {
-                userImageState.setResource(fallbackImage);
+            }, fallbackImageCanvas => {
+                userImageState.setResource(new UserImage(fallbackImageCanvas, imageID));
             });
         } else {
             userImageState.addCallback(listener, onLoad);

@@ -11,7 +11,7 @@
     background-color: rgb(150,150,250);
     color: rgb(200,200,200);
     position: absolute;
-    left: 5vw;
+    left: 2vw;
     top: 5vh;
     font-size: 5vh;
 }
@@ -52,13 +52,13 @@
     color: red;
     font-size: 5vh;
     position: absolute;
-    left: 30vw;
+    left: 12vw;
     top: 4vh;
 }
 
 .Image-Create-Info {
     font-size: 5vh;
     position: absolute;
-    left: 30vw;
+    left: 12vw;
     top: 4vh;
 }

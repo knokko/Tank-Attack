@@ -62,7 +62,6 @@ pub struct ServerApp {
 
 impl ServerApp {
     fn stop_websocket_server(&self) {
-        //let connection_manager = self.connection_manager.lock().unwrap();
         let connection_manager = self.connection_manager.read().unwrap();
         let ref_manager = connection_manager.as_ref();
         if ref_manager.is_some() {

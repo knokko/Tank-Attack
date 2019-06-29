@@ -1,19 +1,40 @@
-use super::broadcast;
+use super::broadcast_except;
 
 use crate::connection::protocol::stc;
+use crate::connection::state::ConnectionState;
 use crate::data::image::image::ImageID;
+use crate::data::account::account::AccountID;
 use crate::ServerApp;
 
 use bit_helper::output::{BitOutput, U8VecBitOutput};
 use std::sync::Arc;
 
-pub fn broadcast_changed_pixels(app: Arc<ServerApp>, image_id: ImageID) {
+pub fn broadcast_changed_pixels(app: Arc<ServerApp>, image_id: ImageID, state: &ConnectionState) {
     let mut output = U8VecBitOutput::with_capacity(3);
     output.add_bool(false);
     output.add_sized_u64(stc::IMAGE, stc::CODE_BITS);
     output.add_sized_u64(stc::image::IMAGE_CHANGE, stc::image::CODE_BITS);
     output.add_var_u64(image_id as u64);
-    broadcast(app, output.vector);
+    broadcast_except(app, state.websocket_index, output.vector);
+}
+
+pub fn broadcast_changed_meta(app: Arc<ServerApp>, image_id: ImageID, state: &ConnectionState) {
+    let mut output = U8VecBitOutput::with_capacity(3);
+    output.add_bool(false);
+    output.add_sized_u64(stc::IMAGE, stc::CODE_BITS);
+    output.add_sized_u64(stc::image::IMAGE_META_CHANGE, stc::image::CODE_BITS);
+    output.add_var_u64(image_id as u64);
+    broadcast_except(app, state.websocket_index, output.vector);
+}
+
+pub fn broadcast_created_image(app: Arc<ServerApp>, owner_id: AccountID, image_id: ImageID, state: &ConnectionState){
+    let mut output = U8VecBitOutput::with_capacity(5);
+    output.add_bool(false);
+    output.add_sized_u64(stc::IMAGE, stc::CODE_BITS);
+    output.add_sized_u64(stc::image::IMAGE_CREATE, stc::image::CODE_BITS);
+    output.add_var_u64(image_id as u64);
+    output.add_var_u64(owner_id as u64);
+    broadcast_except(app, state.websocket_index, output.vector);
 }
 
 pub mod upload {

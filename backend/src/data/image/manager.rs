@@ -31,13 +31,14 @@ impl ImageManager {
     pub fn init(account_manager: &mut AccountManager) -> ImageManager {
         let path = Path::new(PATH_NAME);
         if path.exists() {
+            let file_size = path.metadata().unwrap().len();
             let mut file = File::open(path).unwrap();
 
             let mut amount_buffer = [0; 4];
             file.read_exact(&mut amount_buffer).unwrap();
             let amount = bit_helper::converter::u8_array_to_u32(amount_buffer) as usize;
 
-            let mut file_content = vec![0; amount];
+            let mut file_content = vec![0; file_size as usize - 4];
             file.read_exact(&mut file_content).unwrap();
             let mut input = U8VecBitInput::new(file_content);
 

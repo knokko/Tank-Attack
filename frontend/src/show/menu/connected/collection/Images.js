@@ -73,6 +73,7 @@ export default class ImageMenu extends Component {
                         width="10vw"
                         height="10vh"
                         imageID={imageID}
+                        key={index}
                         onClick={userImage => {
                             this.setState({ selectedImage: userImage });
                         }}

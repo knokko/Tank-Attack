@@ -58,7 +58,7 @@ impl Image {
     }
 
     fn get_path(&self) -> String {
-        format!("data/images/image{}.png", self.id)
+        format!("data/images/image{}.bin", self.id)
     }
 
     pub fn get_data(&self) -> Result<ImageData, Error> {
@@ -75,6 +75,7 @@ impl Image {
         let height = size_data[1] as usize + 1;
 
         let required_size = 4 * width * height;
+
         let mut pixel_data = vec![0; required_size];
         file.read_exact(&mut pixel_data)?;
         return Ok(ImageData::from_data(pixel_data, width, height));
@@ -85,7 +86,7 @@ impl Image {
         let path = Path::new(&path_name);
         std::fs::create_dir_all(path.parent().unwrap())?;
         let mut file = File::create(path)?;
-        file.write_all(&[(data.get_width() - 1) as u8, data.get_height() as u8])?;
+        file.write_all(&[(data.get_width() - 1) as u8, (data.get_height() - 1) as u8])?;
         file.write_all(data.get_pixel_data())?;
         let current_time = current_time();
         self.last_modified = current_time;

@@ -1,4 +1,7 @@
 import { requestImageMetaData } from '../connection/sending/Image';
+import deletedImageURL from '../../show/images/deleted.png';
+import ioErrorImageURL from '../../show/images/io_error.png';
+import privateImageURL from '../../show/images/private.png';
 
 /**
  * Represents a user-created image. Please do not access the properties of instances of this call directly, but only call its methods.
@@ -80,6 +83,14 @@ export default class UserImage {
                 index--;
             }
         }
+    }
+
+    getWidth(){
+        return this.image.width;
+    }
+
+    getHeight(){
+        return this.image.height;
     }
 
     /**
@@ -175,3 +186,24 @@ class ChangeListener {
         this.callback = callback;
     }
 }
+
+function loadFallbackImage(canvas, url){
+    const image = new Image();
+    image.onload = () => {
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+    };
+    image.src = url;
+}
+
+const DeletedImageCanvas = document.createElement('canvas');
+const IOErrorImageCanvas = document.createElement('canvas');
+const PrivateImageCanvas = document.createElement('canvas');
+
+loadFallbackImage(DeletedImageCanvas, deletedImageURL);
+loadFallbackImage(IOErrorImageCanvas, ioErrorImageURL);
+loadFallbackImage(PrivateImageCanvas, privateImageURL);
+
+export { DeletedImageCanvas, IOErrorImageCanvas, PrivateImageCanvas}

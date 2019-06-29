@@ -24,6 +24,8 @@ pub struct ConnectionHandler {
 
     out: Arc<ws::Sender>,
     pool: RefCell<ThreadPool>,
+
+    out_index: usize
 }
 
 struct NextTask {
@@ -42,7 +44,8 @@ impl NextTask {
 
 impl ConnectionHandler {
     pub fn new(
-        out: ws::Sender,
+        out: Arc<ws::Sender>,
+        out_index: usize,
         application: Arc<ServerApp>,
         pool: RefCell<ThreadPool>,
     ) -> ConnectionHandler {
@@ -51,11 +54,16 @@ impl ConnectionHandler {
             next_task: Arc::new(Mutex::new(NextTask::new())),
             task_counter: 0,
             is_closing: false,
-            state: Arc::new(Mutex::new(ConnectionState::new(Arc::clone(&application)))),
-            out: Arc::new(out),
+            state: Arc::new(Mutex::new(ConnectionState::new(Arc::clone(&application), out_index))),
+            out: out,
             application: application,
             pool: pool,
+            out_index: out_index
         }
+    }
+
+    pub fn get_out_index(&self) -> usize {
+        self.out_index
     }
 }
 

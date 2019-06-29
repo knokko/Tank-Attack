@@ -20,8 +20,12 @@ export default class UserImage extends Component {
     componentDidMount(){
         ImageManager.getUserImage(this.props.imageID, this, userImage => {
             this.userImage = userImage;
+            this.canvasRef.current.width = userImage.getWidth();
+            this.canvasRef.current.height = userImage.getHeight();
             this.userImage.draw(this.canvasRef.current);
             this.userImage.addChangeListener(this, userImage => {
+                this.canvasRef.current.width = userImage.getWidth();
+                this.canvasRef.current.height = userImage.getHeight();
                 userImage.draw(this.canvasRef.current);
             });
         });
@@ -41,12 +45,6 @@ export default class UserImage extends Component {
                 className="UserImageCanvas" 
                 ref={this.canvasRef}
                 onClick={this.handleClick}
-                style={{
-                    left: this.props.x,
-                    top: this.props.y,
-                    width: this.props.width,
-                    height: this.props.height
-                }}
             />
         );
     }
