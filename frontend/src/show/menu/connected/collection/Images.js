@@ -73,10 +73,10 @@ export default class ImageMenu extends Component {
                 for (let index = 0; index < length; index++) {
                     const imageID = imageIDs[index];
                     result[index] = <UserImageComponent
-                        x={(10 + 15 * (index % 5)) + 'vw'}
-                        y={(10 + 15 * Math.floor(index / 5)) + 'vh'}
-                        width="10vw"
-                        height="10vh"
+                        x={7 + 15 * (index % 5)}
+                        y={5 + 20 * Math.floor(index / 5)}
+                        maxWidth={13}
+                        maxHeight={18}
                         imageID={imageID}
                         key={index}
                         onClick={userImage => {

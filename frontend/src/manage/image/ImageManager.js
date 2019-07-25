@@ -63,7 +63,7 @@ class ImageManager {
             userImageState = new ResourceState(listener, onLoad);
             this.imageMap.set(imageID, userImageState);
             requestImage(imageID, (pixelData, width, height) => {
-                createImage(pixelData, width, height, userImage => {
+                createImage(imageID, pixelData, width, height, userImage => {
                     userImageState.setResource(userImage);
                 });
             }, fallbackImageCanvas => {

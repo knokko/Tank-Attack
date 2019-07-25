@@ -9,9 +9,10 @@ import privateImageURL from '../../show/images/private.png';
 export default class UserImage {
 
     /**
-     * Creates a new UserImage instance from the given Image and time. You should probably not call this constructor
+     * Creates a new UserImage instance from the given Image and id. You should probably not call this constructor
      * directly, but use ImageManager.getUserImage(imageID) instead.
      * @param {HTMLCanvasElement} image The image
+     * @param {number} id The id of the image
      */
     constructor(image, id){
         this.image = image;
@@ -125,12 +126,13 @@ export default class UserImage {
 /**
  * Creates a new UserImage from the given pixel data and calls onReady once it is ready.
  * This function should only be called from ImageManager.getUserImage().
+ * @param {number} id The id that should be given to the created image
  * @param {Uint8Array} pixelData A Uint8(Clamped)Array containing the pixel data in RGBA order.
  * @param {number} width The width of the image
  * @param {number} height The height of the image
  * @param {Function} onReady The function to be called when the (user)image is ready. It should have a single parameter of type UserImage
  */
-export function createImage(pixelData, width, height, onReady){
+export function createImage(id, pixelData, width, height, onReady){
     if (4 * width * height !== pixelData.length){
         throw new Error('pixelDataLength is ' + pixelData.length + ', but width is ' + width + ' and height is ' + height);
     }
@@ -141,7 +143,7 @@ export function createImage(pixelData, width, height, onReady){
     const imageData = ctx.createImageData(width, height);
     imageData.data.set(pixelData);
     ctx.putImageData(imageData, 0, 0);
-    const userImage = new UserImage(canvas);
+    const userImage = new UserImage(canvas, id);
     onReady(userImage);
 }
 
