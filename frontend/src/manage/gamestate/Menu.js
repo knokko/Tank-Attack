@@ -2,53 +2,52 @@ import React from 'react';
 import BaseMenu from '../../show/menu/Connected';
 import CollectionMenu from '../../show/menu/connected/Collection';
 import ConnectionManager from '../connection/Manager';
+import { BrowserRouter as Router, Route } from 'react-router-dom';
 
-export default class StateMenu {
+const Instance = {
 
-    constructor(app){
-        this.app = app;
-        this.baseMenu = <BaseMenu gameState={this} />;
-        this.collectionMenu = <CollectionMenu gameState={this} />;
-        this.menu = this.baseMenu;
-        this.isLoading = false;
-    }
+    // Will be set in the App constructor
+    app: null,
+    isLoading: false,
 
-    setMenu(newMenu){
-        this.menu = newMenu;
-        this.app.forceUpdate();
-    }
-
-    setLoading(){
+    setLoading: function(){
         this.isLoading = true;
-    }
+    },
 
-    render(){
-        return this.menu;
-    }
+    render: function({ match }){
+        return (<Router>
+            <Route path={match.path} exact render={props => <BaseMenu {...props} gameState={this} />} />
+            <Route path={match.path + "/collection"} render={props => <CollectionMenu {...props} gameState={this} />} />
+        </Router>);
+    },
 
-    clickBasePlay = _ => {
+    clickBasePlay: function(match, history) {
         if (!this.isLoading){
             window.alert('To play menu');
         }
-    }
+    },
 
-    clickBaseCollection = _ => {
+    clickBaseCollection: function(match, history) {
         if (!this.isLoading){
-            this.setMenu(this.collectionMenu);
+            history.push(match.url + "/collection");
         }
-    }
+    },
 
-    clickBaseGallery = _ => {
+    clickBaseGallery: function(match, history) {
         if (!this.isLoading){
             window.alert('To the gallery');
         }
-    }
+    },
 
-    clickBaseDisconnect = _ => {
+    clickBaseDisconnect: function(match, history) {
         ConnectionManager.disconnect();
-    }
+    },
 
-    clickCollectionBack = _ => {
-        this.setMenu(this.baseMenu);
+    clickCollectionBack: function(match, history) {
+        history.push(match.path.substring(0, match.path.lastIndexOf("/")));
     }
 }
+
+Instance.render = Instance.render.bind(Instance);
+
+export default Instance;

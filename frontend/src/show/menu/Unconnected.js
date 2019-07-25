@@ -23,7 +23,6 @@ export default class Unconnected extends Component {
 
     showAdvanced = () => {
         this.setShowAdvanced(true);
-        // TODO prevent clicking on Connect during this state
     }
 
     cancelAdvanced = () => {
@@ -43,9 +42,9 @@ export default class Unconnected extends Component {
             <div className="Unconnected-Main-Box">
                 <button 
                 className="Unconnected-Main-Box-Connect"
-                onClick={_ => {
+                onClick={() => {
                     if (!this.state.showAdvanced){
-                        this.props.gameState.connect();
+                        this.props.gameState.connect(this.props);
                     }
                 }}
                 >Connect!</button>

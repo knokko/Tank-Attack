@@ -2,33 +2,35 @@ import Menu from '../../show/menu/Unconnected';
 import ConnectingMenu from '../../show/menu/Connecting';
 import ConnectProfileManager from '../storage/ConnectProfiles';
 import ConnectionManager from '../connection/Manager';
-import StateMenu from './Menu';
 import React from 'react';
 
-export default class Unconnected {
+const Instance = {
 
-    constructor(app){
-        this.isConnecting = false;
-        this.app = app;
-    }
+    isConnecting: false,
 
-    connect(){
+    // This is supposed to be set in the constructor of App
+    app: null,
+
+    connect: function({ history }){
         this.isConnecting = true;
         const selectedProfile = ConnectProfileManager.profiles[ConnectProfileManager.selected];
-        const self = this;
-        ConnectionManager.connect(selectedProfile, _ => {
-            self.app.setGameState(new StateMenu(this.app));
-        }, _ => {
+        ConnectionManager.connect(selectedProfile, () => {
+            history.push("/menu");
+        }, () => {
             this.isConnecting = false;
-            self.app.setGameState(this);
+            history.push("");
         });
-    }
+    },
 
-    render(){
+    render: function({ match, history }){
         if (!this.isConnecting){
-            return <Menu gameState={this} />;
+            return <Menu gameState={this} match={match} history={history} />;
         } else {
             return <ConnectingMenu />;
         }
     }
 }
+
+Instance.render = Instance.render.bind(Instance);
+
+export default Instance;

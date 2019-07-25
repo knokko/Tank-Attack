@@ -19,8 +19,8 @@ export default class CreateImage extends Component {
     }
 
     goBack() {
-        const collectionMenu = this.props.collectionMenu;
-        collectionMenu.setBodyComponent(collectionMenu.imagesBodyComponent);
+        const url = this.props.match.url;
+        this.props.history.push(url.substring(0, url.lastIndexOf("/")));
     }
 
     setError(errorMessage) {

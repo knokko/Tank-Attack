@@ -87,12 +87,20 @@ class Manager {
                 }
             };
             this.socket.onclose = event => {
-                self.state = NOT_CONNECTED;
-                if (event.reason) {
-                    window.alert('Disconnected from server: ' + event.reason);
+                if (self.state === CONNECTED){
+                    if (event.reason) {
+                        window.alert('Disconnected from server: ' + event.reason);
+                    } else {
+                        window.alert('Disconnected from server');
+                    }
                 } else {
-                    window.alert('Disconnected from server');
+                    if (event.reason){
+                        window.alert('Could not connect to server: ' + event.reason);
+                    } else {
+                        window.alert('Could not connect to server');
+                    }
                 }
+                self.state = NOT_CONNECTED;
                 onClose();
             };
             this.socket.onmessage = event => {

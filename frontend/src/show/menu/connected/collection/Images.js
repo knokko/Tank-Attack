@@ -2,6 +2,7 @@ import React, { Component, Fragment } from 'react';
 import ImageManager from '../../../../manage/image/ImageManager';
 import ProfileManager from '../../../../manage/storage/ConnectProfiles';
 import UserImageComponent from '../../../component/image/UserImage';
+import { Route } from 'react-router-dom';
 import CreateImageMenu from './images/Create';
 import './Images.css';
 
@@ -23,10 +24,10 @@ export default class ImageMenu extends Component {
         ImageManager.getImageIDS(this.userID, this, imageIDs => {
             this.setState({ imageIDs: imageIDs, selectedImage: null });
             ImageManager.listenUserImageIDs(this.userID, this, newImageIDs => {
-                if (this.state.selectedImage !== null && !newImageIDs.includes(this.state.selectedImage.getID())){
-                    this.setState({ imageIDs: newImageIDs, selectedImage: null});
+                if (this.state.selectedImage !== null && !newImageIDs.includes(this.state.selectedImage.getID())) {
+                    this.setState({ imageIDs: newImageIDs, selectedImage: null });
                 } else {
-                    this.setState({ imageIDs: newImageIDs});
+                    this.setState({ imageIDs: newImageIDs });
                 }
             })
         });
@@ -41,19 +42,23 @@ export default class ImageMenu extends Component {
     }
 
     toCreateImageMenu() {
-        const collectionMenu = this.props.collectionMenu;
-        collectionMenu.setBodyComponent(<CreateImageMenu collectionMenu={collectionMenu} />);
+       this.props.history.push(this.props.match.url + "/create");
     }
 
     render() {
         return (<Fragment>
-            <div className="Images-Collection">
-                {this.renderImages()}
-            </div>
-            <div className="Images-Right-Bar">
-                {this.renderSelected()}
-                <button className="Images-New-Button" onClick={this.toCreateImageMenu}>Upload image</button>
-            </div>
+            <Route path={this.props.path} exact render={() => {
+                return (<Fragment>
+                    <div className="Images-Collection">
+                        {this.renderImages()}
+                    </div>
+                    <div className="Images-Right-Bar">
+                        {this.renderSelected()}
+                        <button className="Images-New-Button" onClick={this.toCreateImageMenu}>Upload image</button>
+                    </div>
+                </Fragment>);
+            }} />
+            <Route path={this.props.match.path + "/create"} render={props => <CreateImageMenu {...props} collectionMenu={this.props.collectionMenu} />} />
         </Fragment>);
     }
 

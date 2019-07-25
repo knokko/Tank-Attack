@@ -1,58 +1,40 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import ImageBody from './collection/Images';
+import { Route } from 'react-router-dom';
 import './Collection.css';
 
 export default class CollectionMenu extends Component {
 
-    constructor(props){
-        super(props);
-        this.state = {
-            bodyComponent: null
-        };
+    render() {
+        const { gameState, match, history } = this.props;
 
-        // TODO Add the other body components
-        //this.imagesBodyComponent = new ImageBody({collectionMenu: this});
-        this.imagesBodyComponent = <ImageBody collectionMenu={this} />;
-        this.tilesBodyComponent = <Fragment>Tiles body</Fragment>;
-        this.levelsBodyComponent = <Fragment>Levels body</Fragment>;
-        this.projectilesBodyComponent = <Fragment>Projectiles body</Fragment>;
-        this.playersBodyComponent = <Fragment>Players body</Fragment>;
-        this.enemiesBodyComponent = <Fragment>Enemies body</Fragment>;
-
-        this.setBodyComponent = this.setBodyComponent.bind(this);
-    }
-
-    setBodyComponent(newBodyComponent){
-        this.setState({
-            bodyComponent: newBodyComponent
-        });
-    }
-
-    render(){
-        const gameState = this.props.gameState;
         return (<div className="Collection">
-            <div className="Collection-Upper-Bar">
-                { this.renderUpperButton('images') }
-                { this.renderUpperButton('tiles') }
-                { this.renderUpperButton('levels') }
-                { this.renderUpperButton('projectiles') }
-                { this.renderUpperButton('players') }
-                { this.renderUpperButton('enemies') }
-                <button className="Collection-Back-Button" onClick={gameState.clickCollectionBack}>Back</button>
-            </div>
-            <div className="Collection-Body">
-                { this.state.bodyComponent }
-            </div>
-        </div>);
+                <div className="Collection-Upper-Bar">
+                    {this.renderUpperButton('images')}
+                    {this.renderUpperButton('tiles')}
+                    {this.renderUpperButton('levels')}
+                    {this.renderUpperButton('projectiles')}
+                    {this.renderUpperButton('players')}
+                    {this.renderUpperButton('enemies')}
+                    <button className="Collection-Back-Button" onClick={() => gameState.clickCollectionBack(match, history)}>Back</button>
+                </div>
+                <div className="Collection-Body">
+                    <Route path={match.path + "/images"} render={props => <ImageBody {...props} collectionMenu={this} /> } />
+                    <Route path={match.path + "/tiles"} render={() => "tiles"} />
+                    <Route path={match.path + "/levels"} render={() => "levels"} />
+                    <Route path={match.path + "/projectiles"} render={() => "projectiles"} />
+                    <Route path={match.path + "/players"} render={() => "players"} />
+                    <Route path={match.path + "/enemies"} render={() => "enemies"} />
+                </div>
+            </div>);
     }
 
-    renderUpperButton(text){
-        return <button 
+    renderUpperButton(text) {
+        return <button
             className="Collection-Upper-Button"
-            onClick={_ => {
-                //this[text + 'BodyComponent'].showOnReady(this.setBodyComponent);
-                this.setBodyComponent(this[text + 'BodyComponent']);
+            onClick={() => {
+                this.props.history.push(this.props.match.url + "/" + text);
             }}
-        >{ text.charAt(0).toUpperCase() + text.substring(1) }</button>;
+        >{text.charAt(0).toUpperCase() + text.substring(1)}</button>;
     }
 }
