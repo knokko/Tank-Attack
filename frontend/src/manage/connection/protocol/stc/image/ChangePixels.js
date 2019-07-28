@@ -1,0 +1,6 @@
+export const CHANGE_PIXELS_SUCCESS = 0;
+export const CHANGE_PIXELS_IO_ERROR = 1;
+export const CHANGE_PIXELS_UNAUTHORIZED = 2;
+export const CHANGE_PIXELS_NO_IMAGE = 3;
+
+export const CHANGE_PIXELS_CODE_BITS = 2;

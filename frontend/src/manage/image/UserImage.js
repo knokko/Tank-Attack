@@ -19,6 +19,7 @@ export default class UserImage {
         this.id = id;
         this.meta = null;
         this.changeListeners = [];
+        this.metaGetListeners = null;
         this.metaChangeListeners = [];
     }
 
@@ -108,17 +109,40 @@ export default class UserImage {
      * is received.
      * The isVisible method of the metadata can be used to check if the metadata was obtained successfully. Make sure to call
      * it before trying to read the values from the metadata.
+     * @param {any} listener The entity responsible for obtaining the metadata of this image. The listener will
+     * only be used for cancelling the request if that is asked.
      * @param {Function} callback The function to call once the metadata of this image has been obtained.
      * It should take a single parameter of type MetaData.
      */
-    getMetaData(callback){
+    getMetaData(listener, callback){
         if (this.meta === null){
-            requestImageMetaData(this.id, meta => {
-                this.meta = meta;
-                callback(meta);
-            });
+            if (this.metaGetListeners === null){
+                this.metaGetListeners = [new GetListener(listener, callback)];
+                requestImageMetaData(this.id, meta => {
+                    this.meta = meta;
+                    for (let index = 0; index < this.metaGetListeners.length; index++){
+                        this.metaGetListeners[index].callback(meta);
+                    }
+                    this.metaGetListeners = null;
+                });
+            } else {
+                this.metaGetListeners.push(new GetListener(listener, callback));
+            }
         } else {
             callback(this.meta);
+        }
+    }
+
+    cancelGetMetaData(listener){
+        if (this.metaGetListeners !== null){
+            for (let index = 0; index < this.metaGetListeners.length; index++){
+                if (this.metaGetListeners[index].listener === listener){
+                    this.metaGetListeners.splice(index, 1);
+                    index--;
+                }
+            }
+        } else {
+            console.log('Warning: cancelled getMetaData of UserImage too early or late with listener', listener);
         }
     }
 }
@@ -182,6 +206,14 @@ export class MetaData {
 }
 
 class ChangeListener {
+
+    constructor(listener, callback){
+        this.listener = listener;
+        this.callback = callback;
+    }
+}
+
+class GetListener {
 
     constructor(listener, callback){
         this.listener = listener;

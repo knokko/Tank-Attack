@@ -4,6 +4,8 @@ import {
     CODE_IMAGE_GET_META ,
     CODE_IMAGE_IDS,
     CODE_IMAGE_UPLOAD,
+    CODE_IMAGE_CHANGE_META,
+    CODE_IMAGE_CHANGE_PIXELS,
     CODE_IMAGE_BITCOUNT
 } from '../protocol/cts/Image';
 import { 
@@ -32,6 +34,19 @@ import {
     UPLOAD_MANY_YOU,
     UPLOAD_BITCOUNT
 } from '../protocol/stc/image/Upload';
+import {
+    CHANGE_META_SUCCESS,
+    CHANGE_META_UNAUTHORIZED,
+    CHANGE_META_NO_IMAGE,
+    CHANGE_META_BITCOUNT
+} from '../protocol/stc/image/ChangeMeta';
+import { 
+    CHANGE_PIXELS_SUCCESS,
+    CHANGE_PIXELS_IO_ERROR,
+    CHANGE_PIXELS_UNAUTHORIZED,
+    CHANGE_PIXELS_NO_IMAGE,
+    CHANGE_PIXELS_CODE_BITS
+} from '../protocol/stc/image/ChangePixels';
 import ConnectionManager from '../Manager';
 import ImageManager from '../../image/ImageManager';
 import { MetaData, DeletedImageCanvas, IOErrorImageCanvas, PrivateImageCanvas } from '../../image/UserImage';
@@ -152,6 +167,55 @@ export function uploadImage(canvas, name, isPrivate, onSuccess, onFail){
     output.writeNumber(CODE_IMAGE_UPLOAD, CODE_IMAGE_BITCOUNT);
     output.writeBoolean(isPrivate);
     output.writeString(name);
+    output.writeByte(toSignedByte(canvas.width - 1));
+    output.writeByte(toSignedByte(canvas.height - 1));
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const rgbaData = imageData.data;
+    const length = rgbaData.length;
+    for (let index = 0; index < length; index++){
+        output.writeByte(toSignedByte(rgbaData[index]));
+    }
+    output.terminate();
+}
+
+export function changeImageMeta(imageID, newName, newPrivate, onSuccess, onFail){
+    const output = ConnectionManager.createOutput(CODE_IMAGE, input => {
+        const responseCode = input.readNumber(CHANGE_META_BITCOUNT, false);
+        if (responseCode === CHANGE_META_SUCCESS){
+            onSuccess();
+        } else if (responseCode === CHANGE_META_UNAUTHORIZED){
+            onFail('You are not allowed to change this image');
+        } else if (responseCode === CHANGE_META_NO_IMAGE){
+            onFail("The image you are trying to edit doesn't exist (anymore)");
+        } else {
+            onFail('The server is acting weird');
+        }
+    });
+    output.writeNumber(CODE_IMAGE_CHANGE_META, CODE_IMAGE_BITCOUNT);
+    output.writeVarUint(imageID);
+    output.writeBoolean(newPrivate);
+    output.writeString(newName);
+    output.terminate();
+}
+
+export function changeImagePixels(imageID, canvas, onSuccess, onFail){
+    const output = ConnectionManager.createOutput(CODE_IMAGE, input => {
+        const responseCode = input.readNumber(CHANGE_PIXELS_CODE_BITS, false);
+        if (responseCode === CHANGE_PIXELS_SUCCESS){
+            onSuccess();
+        } else if (responseCode === CHANGE_PIXELS_IO_ERROR){
+            onFail('The server is having IO trouble');
+        } else if (responseCode === CHANGE_PIXELS_UNAUTHORIZED){
+            onFail('You are not allowed to change this image');
+        } else if (responseCode === CHANGE_PIXELS_NO_IMAGE){
+            onFail("The image you are trying to change doesn't exist (anymore)");
+        } else {
+            onFail('This should not be possible');
+        }
+    });
+    output.writeNumber(CODE_IMAGE_CHANGE_PIXELS, CODE_IMAGE_BITCOUNT);
+    output.writeVarUint(imageID);
     output.writeByte(toSignedByte(canvas.width - 1));
     output.writeByte(toSignedByte(canvas.height - 1));
     const ctx = canvas.getContext('2d');

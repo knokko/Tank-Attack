@@ -1,0 +1,16 @@
+.Image-Edit-Body {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 85vh;
+    background-color: rgb(150,200,100);
+}
+
+.Image-Edit-Back-Button {
+    position: absolute;
+    left: 5vw;
+    bottom: 75vh;
+    font-size: 5vh;
+    background-color: rgb(200, 120, 0);
+}

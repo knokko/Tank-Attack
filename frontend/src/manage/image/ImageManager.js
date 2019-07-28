@@ -1,4 +1,4 @@
-import { requestImage, requestImageIDs } from '../connection/sending/Image';
+import { requestImage, requestImageIDs, requestImageMetaData } from '../connection/sending/Image';
 import UserImage, { createImage, MetaData } from '../image/UserImage';
 import ProfileManager from '../storage/ConnectProfiles';
 
@@ -30,7 +30,18 @@ class ImageManager {
         userImageState.resource = userImage;
         userImageState.callbackPairs = null;
         this.addUserImageID(ProfileManager.getSelectedProfile().id, imageID);
-        
+    }
+
+    /**
+     * Notifies the image manager that a user has uploaded a new image. This method will make sure that all
+     * listeners of the images of the user will get notified.
+     * @param {number} ownerID The user id of the owner of the uploaded image
+     * @param {number} newImageID The image id of the uploaded image
+     */
+    notifyImageUpload(ownerID, newImageID){
+        if (this.shouldFollowUserImageIDs(ownerID)){
+            this.addUserImageID(ownerID, newImageID);
+        }
     }
 
     /**
@@ -87,6 +98,51 @@ class ImageManager {
     }
 
     /**
+     * Notifies the image manager that someone has changed the image with the given id. The image manager
+     * will make sure that eventual image listeners will get notified of the change.
+     * @param {number} imageID the image id of the changed image
+     */
+    notifyImageChange(imageID){
+        const userImageState = this.imageMap.get(imageID);
+        if (userImageState !== undefined){
+            const userImage = userImageState.resource;
+            if (userImage !== null){
+                requestImage(imageID, (pixelData, width, height) => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    const imageData = new ImageData(width, height);
+                    for (let index = 0; index < pixelData.length; index++){
+                        imageData.data[index] = pixelData[index];
+                    }
+                    ctx.putImageData(imageData, width, height);
+                    userImage.changeImage(canvas);
+                });
+            }
+        }
+    }
+
+    /**
+     * Notifies the image manager that the metadata of the image with the given id has changed.
+     * The image manager will make sure that eventual listeners of the image metadata will be notified.
+     * @param {number} imageID The image id of the image whose metadata changed
+     */
+    notifyImageMetaChange(imageID){
+        const userImageState = this.imageMap.get(imageID);
+        if (userImageState !== undefined){
+            const userImage = userImageState.resource;
+            if (userImage !== null){
+                if (userImage.meta !== null){
+                    requestImageMetaData(imageID, newMeta => {
+                        userImage.changeMeta(newMeta);
+                    });
+                }
+            }
+        }
+    }
+
+    /**
      * Gets or loads all ids of images owned by the user with the given userID. Note that this method doesn't
      * return anything despite the name, it only calls the callback function once the image ids have been
      * obtained.
@@ -117,7 +173,7 @@ class ImageManager {
      * @param {number} userID The id of the user
      */
     shouldFollowUserImageIDs(userID){
-        return this.userImageListenMap.get(userID) !== undefined;
+        return this.userImageListenMap.has(userID);
     }
 
     updateUserImageIDs(userID, newImageIDs){

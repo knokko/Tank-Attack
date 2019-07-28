@@ -8,4 +8,7 @@
     image-rendering: pixelated; /* Chrome */
     image-rendering: optimize-contrast;         /* CSS3 Proposed                  */
     -ms-interpolation-mode: nearest-neighbor;   /* IE8+                           */
+
+    border-left-width: 5vw;
+    border-top-width: 5vh;
 }

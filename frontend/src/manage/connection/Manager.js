@@ -1,9 +1,20 @@
 import { ByteArrayBitOutput } from 'bit-helper/output';
 import { ByteArrayBitInput } from 'bit-helper/input';
 import { CODE_LOGIN, CODE_REGISTER, CTS_CODE_BITS } from './protocol/CtS';
+import {
+    STC_CODE_IMAGE,
+    STC_CODE_BITS
+} from './protocol/StC';
+import {
+    IMAGE_CREATE,
+    IMAGE_CHANGE_PIXELS,
+    IMAGE_CHANGE_META,
+    IMAGE_CODE_BITS
+} from './protocol/stc/Image';
 import * as Login from './protocol/stc/Login';
 import * as Register from './protocol/stc/Register';
 import ConnectProfileManager, { PASSWORD_LENGTH } from '../storage/ConnectProfiles';
+import ImageManager from '../image/ImageManager';
 import { javaByteCast } from 'bit-helper';
 
 const NOT_CONNECTED = 0;
@@ -110,7 +121,23 @@ class Manager {
                     if (input.readBoolean()) {
                         self.waitingCallbacks.shift()(input);
                     } else {
-                        // TODO process server initiated message, but we don't have any yet
+                        const messageType = input.readNumber(STC_CODE_BITS, false);
+                        if (messageType === STC_CODE_IMAGE){
+                            const imageAction = input.readNumber(IMAGE_CODE_BITS, false);
+                            if (imageAction === IMAGE_CREATE){
+                                const imageID = input.readVarUint();
+                                const ownerID = input.readVarUint();
+                                ImageManager.notifyImageUpload(ownerID, imageID);
+                            } else if (imageAction === IMAGE_CHANGE_META){
+                                const imageID = input.readVarUint();
+                                ImageManager.notifyImageMetaChange(imageID);
+                            } else if (imageAction === IMAGE_CHANGE_PIXELS){
+                                const imageID = input.readVarUint();
+                                ImageManager.notifyImageChange(imageID);
+                            } else {
+                                window.alert('The server sent a weird message');
+                            }
+                        }
                     }
                 }
                 fileReader.readAsArrayBuffer(event.data);

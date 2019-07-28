@@ -13,5 +13,12 @@
     top: 0;
     width: 15vw;
     height: 85vh;
-    background-color: rgb(200,50,50);
+    background-color: rgb(100,50,50);
+    font-size: 0.9vw;
+}
+
+.Images-Edit-Button {
+    background-color: rgb(150,150,200);
+    font-size: 2vw;
+    text-align: center;
 }

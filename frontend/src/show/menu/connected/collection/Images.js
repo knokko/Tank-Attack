@@ -4,6 +4,7 @@ import ProfileManager from '../../../../manage/storage/ConnectProfiles';
 import UserImageComponent from '../../../component/image/UserImage';
 import { Route } from 'react-router-dom';
 import CreateImageMenu from './images/Create';
+import EditImageMenu from './images/Edit';
 import './Images.css';
 
 export default class ImageMenu extends Component {
@@ -12,7 +13,8 @@ export default class ImageMenu extends Component {
         super(props);
         this.state = {
             imageIDs: null,
-            selectedImage: null
+            selectedImage: null,
+            selectedMeta: null
         };
 
         this.userID = ProfileManager.getSelectedProfile().id;
@@ -22,10 +24,10 @@ export default class ImageMenu extends Component {
 
     componentDidMount() {
         ImageManager.getImageIDS(this.userID, this, imageIDs => {
-            this.setState({ imageIDs: imageIDs, selectedImage: null });
+            this.setState({ imageIDs: imageIDs, selectedImage: null, selectedMeta: null });
             ImageManager.listenUserImageIDs(this.userID, this, newImageIDs => {
                 if (this.state.selectedImage !== null && !newImageIDs.includes(this.state.selectedImage.getID())) {
-                    this.setState({ imageIDs: newImageIDs, selectedImage: null });
+                    this.setState({ imageIDs: newImageIDs, selectedImage: null, selectedMeta: null });
                 } else {
                     this.setState({ imageIDs: newImageIDs });
                 }
@@ -34,6 +36,13 @@ export default class ImageMenu extends Component {
     }
 
     componentWillUnmount() {
+        if (this.state.selectedImage !== null) {
+            if (this.state.selectedMeta === null) {
+                this.state.selectedImage.cancelGetMetaData(this);
+            } else {
+                this.state.selectedImage.removeMetaChangeListener(this);
+            }
+        }
         if (this.state.imageIDs === null) {
             ImageManager.cancelGetImageIDs(ProfileManager.getSelectedProfile().id, this);
         } else {
@@ -42,12 +51,12 @@ export default class ImageMenu extends Component {
     }
 
     toCreateImageMenu() {
-       this.props.history.push(this.props.match.url + "/create");
+        this.props.history.push(this.props.match.url + "/create");
     }
 
     render() {
         return (<Fragment>
-            <Route path={this.props.path} exact render={() => {
+            <Route path={this.props.match.path} exact render={() => {
                 return (<Fragment>
                     <div className="Images-Collection">
                         {this.renderImages()}
@@ -58,7 +67,8 @@ export default class ImageMenu extends Component {
                     </div>
                 </Fragment>);
             }} />
-            <Route path={this.props.match.path + "/create"} render={props => <CreateImageMenu {...props} collectionMenu={this.props.collectionMenu} />} />
+            <Route path={this.props.match.path + "/create"} render={props => <CreateImageMenu {...props} />} />
+            <Route path={this.props.match.path + "/edit/:imageID"} render={props => <EditImageMenu {...props} />} />
         </Fragment>);
     }
 
@@ -79,8 +89,22 @@ export default class ImageMenu extends Component {
                         maxHeight={18}
                         imageID={imageID}
                         key={index}
+                        selected={this.state.selectedImage && this.state.selectedImage.getID() === imageID}
                         onClick={userImage => {
+                            if (this.state.selectedImage !== null) {
+                                if (this.state.selectedMeta === null) {
+                                    this.state.selectedImage.cancelGetMetaData(this);
+                                } else {
+                                    this.state.selectedImage.removeMetaChangeListener(this);
+                                }
+                            }
                             this.setState({ selectedImage: userImage });
+                            userImage.getMetaData(this, meta => {
+                                this.setState({ selectedMeta: meta });
+                                userImage.addMetaChangeListener(this, (_image, newMeta) => {
+                                    this.setState({ selectedMeta: newMeta });
+                                });
+                            });
                         }}
                     />;
                 }
@@ -94,10 +118,37 @@ export default class ImageMenu extends Component {
     renderSelected() {
         if (this.state.selectedImage !== null) {
             return <Fragment>
-                You selected the image with id {this.state.selectedImage.getID()}
+                Image ID: {this.state.selectedImage.getID()} <br />
+                {this.state.selectedMeta && this.state.selectedMeta.isVisible() && this.renderSelectedMeta()}
             </Fragment>
         } else {
             return "No image selected";
         }
+    }
+
+    renderSelectedMeta() {
+        const meta = this.state.selectedMeta;
+        return (<Fragment>
+            {meta.name} <br />
+            {meta.isPrivate ? 'private' : 'public'} <br />
+            Last modified at {this.formatTime(meta.lastModified)} <br />
+            Created at {this.formatTime(meta.createdAt)} <br />
+            <button className="Images-Edit-Button" onClick={() => {
+                this.props.history.push(this.props.match.url + '/edit/' + this.state.selectedImage.getID());
+            }} >Edit</button> <br />
+        </Fragment>);
+    }
+
+    formatTime(millis) {
+        const date = new Date(millis);
+        return this.ensureLength(date.getDate()) + '/' + this.ensureLength(date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + this.ensureLength(date.getHours()) + ':' + this.ensureLength(date.getMinutes());
+    }
+
+    ensureLength(number, minLength = 2) {
+        let asString = number + '';
+        while (asString.length < minLength) {
+            asString = '0' + asString;
+        }
+        return asString;
     }
 }

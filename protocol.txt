@@ -2,7 +2,7 @@ The frontend will open a websocket connection when it wants to log in or registe
 When this happens, it will send the corresponding message as soon as the connection opens.
 
 For Client to Server messages (cts):
-The first byte denotes the message type (for instance LOGIN, REGISTER or IMAGE)
+The first sized uint of size CTS_CODE_BITS denotes the message type (for instance LOGIN, REGISTER or IMAGE)
 The rest of the message depends entirely on the message type and payload
 
 For Server to Client messages (stc):
@@ -10,8 +10,7 @@ The first boolean denotes whether the message is a response or a server initiati
 -If it is true, the server is responding to a message sent by the client. This message responds to the earliest message sent
 by the client that was not yet responded to. Then there is no additional header, but the payload comes immediathly after the true.
 -If it is false, the message is not a response to a client message, but the server informs the client that something changed.
-Then, the first byte denotes the message type (currently, there are no such messages, but they will be added as soon as
-actual multiplayer comes in or multiple people are building something together). The rest of the message is then the payload.
+Then, the first sized uint of size STC_CODE_BITS denotes the message type. The rest of the message is then the payload.
 
 The folder 'client requests + responses' contains the protocols for the client to server messages and the corresponding server response.
 The folder 'server updates' contains the protocols for messages from server to client that are not a responses to requests of that client.

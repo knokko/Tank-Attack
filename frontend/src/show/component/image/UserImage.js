@@ -69,7 +69,7 @@ export default class UserImage extends Component {
                     { position: 'absolute', 
                     left: this.props.x * window.innerWidth / 100 + (maxWidth - width) / 2, 
                     top: this.props.y * window.innerHeight / 100 + (maxHeight - height) / 2, 
-                    width: width, height: height}
+                    width: width, height: height, borderColor: this.props.selected ? 'blue' : 'white'}
                 }
             />
         );
