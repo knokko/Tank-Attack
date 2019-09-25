@@ -1,16 +1,89 @@
 .Image-Edit-Body {
+    background-color: rgb(200,50,250);
     position: absolute;
     left: 0;
     top: 0;
     width: 100vw;
     height: 85vh;
-    background-color: rgb(150,200,100);
 }
 
-.Image-Edit-Back-Button {
+.Image-Edit-Back {
+    background-color: rgb(150,150,250);
+    color: rgb(200,200,200);
     position: absolute;
-    left: 5vw;
-    bottom: 75vh;
+    left: 2vw;
+    top: 5vh;
     font-size: 5vh;
-    background-color: rgb(200, 120, 0);
+}
+
+.Image-Edit-Name-Label {
+    color: rgb(0, 0, 0);
+    position: absolute;
+    left: 25vw;
+    font-size: 2.5vw;
+    top: 20vh;
+}
+
+.Image-Edit-Private-Label {
+    color: rgb(0, 0, 0);
+    position: absolute;
+    left: 25vw;
+    font-size: 2.5vw;
+    bottom: 48vh;
+}
+
+.Image-Edit-Image-Label {
+    color: rgb(0, 0, 0);
+    position: absolute;
+    left: 25vw;
+    font-size: 2.5vw;
+    top: 50vh;
+}
+
+.Image-Edit-Name-Input {
+    color: rgb(50,150,200);
+    background-color: rgb(200,200,100);
+    position: absolute;
+    left: 35vw;
+    font-size: 5vh;
+    top: 20vh;
+}
+
+.Image-Edit-Private-Input {
+    position: absolute;
+    left: 22vw;
+    bottom: 49vh;
+    transform: scale(2);
+}
+
+.Image-Edit-File-Input {
+    position: absolute;
+    left: 35vw;
+    font-size: 5vh;
+    top: 50vh;
+}
+
+.Image-Edit-Save {
+    background-color: rgb(0,200,50);
+    color: rgb(0,0,0);
+    font-size: 7vh;
+    position: absolute;
+    left: 40vw;
+    bottom: 10vh;
+    height: 10vh;
+}
+
+.Image-Edit-Error {
+    color: red;
+    font-size: 5vh;
+    position: absolute;
+    left: 12vw;
+    top: 4vh;
+}
+
+.Image-Edit-Info {
+    font-size: 5vh;
+    position: absolute;
+    left: 12vw;
+    top: 4vh;
 }

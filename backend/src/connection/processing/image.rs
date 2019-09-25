@@ -109,7 +109,7 @@ fn process_image_change_pixels(
             if image.can_edit(account_id) {
                 let result = image.set_data(ImageData::from_bits(input)?);
                 if result.is_ok() {
-                    image::change_pixels::send_success(socket)?;
+                    image::change_pixels::send_success(socket, image.get_last_modified())?;
                     image::broadcast_changed_pixels(Arc::clone(&app), image_id as ImageID, state);
                     Ok(())
                 } else {

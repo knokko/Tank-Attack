@@ -1,6 +1,6 @@
 import React from 'react';
-import BaseMenu from '../../show/menu/Connected';
-import CollectionMenu from '../../show/menu/connected/Collection';
+import BaseMenu from 'show/menu/Connected';
+import CollectionMenu from 'show/menu/connected/Collection';
 import ConnectionManager from '../connection/Manager';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 

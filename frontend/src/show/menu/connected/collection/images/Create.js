@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import './Create.css';
-import { uploadImage } from '../../../../../manage/connection/sending/Image';
+import './Edit.css';
+import { uploadImage } from 'manage/connection/sending/Image';
 
 export default class CreateImage extends Component {
 
@@ -12,6 +12,7 @@ export default class CreateImage extends Component {
         };
 
         this.textInputRef = React.createRef();
+        this.privateRef = React.createRef();
         this.fileInputRef = React.createRef();
 
         this.goBack = this.goBack.bind(this);
@@ -46,9 +47,9 @@ export default class CreateImage extends Component {
                         const ctx = imageCanvas.getContext('2d');
                         ctx.drawImage(image, 0, 0);
 
-                        // TODO Add checkbox for private instead of hardcoding false
                         const name = this.textInputRef.current.value;
-                        uploadImage(imageCanvas, name, false, () => {
+                        const isPrivate = this.privateRef.current.checked;;
+                        uploadImage(imageCanvas, name, isPrivate, () => {
                             this.goBack();
                         }, reason => {
                             this.setError(reason);
@@ -70,15 +71,17 @@ export default class CreateImage extends Component {
     }
 
     render() {
-        return (<div className="Image-Create-Body">
-            {this.state.error && <div className="Image-Create-Error">{this.state.error}</div>}
-            {this.state.info && <div className="Image-Create-Info">{this.state.info} </div>}
-            <button className="Image-Create-Back" onClick={this.goBack}>Back</button>
-            <div className="Image-Create-Label" style={{ top: '20vh' }}>Name:</div>
-            <input type="text" ref={this.textInputRef} className="Image-Create-Text-Input" style={{ top: '20vh' }}></input>
-            <div className="Image-Create-Label" style={{ top: '40vh' }}>Image:</div>
-            <input type="file" ref={this.fileInputRef} className="Image-Create-File-Input" style={{ top: '40vh' }}></input>
-            <button className="Image-Create-Upload" onClick={this.upload}>Upload</button>
+        return (<div className="Image-Edit-Body">
+            {this.state.error && <div className="Image-Edit-Error">{this.state.error}</div>}
+            {this.state.info && <div className="Image-Edit-Info">{this.state.info} </div>}
+            <button className="Image-Edit-Back" onClick={this.goBack}>Back</button>
+            <div className="Image-Edit-Name-Label">Name:</div>
+            <input type="text" ref={this.textInputRef} className="Image-Edit-Name-Input"></input>
+            <div className="Image-Edit-Private-Label">Private</div>
+            <input type="checkbox" ref={this.privateRef} className="Image-Edit-Private-Input"></input>
+            <div className="Image-Edit-Image-Label">Image:</div>
+            <input type="file" ref={this.fileInputRef} className="Image-Edit-File-Input"></input>
+            <button className="Image-Edit-Save" onClick={this.upload}>Upload</button>
         </div>);
     }
 }

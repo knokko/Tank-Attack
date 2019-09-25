@@ -1,6 +1,6 @@
 import React, { Component, Fragment } from 'react';
-import ImageManager from '../../../../manage/image/ImageManager';
-import ProfileManager from '../../../../manage/storage/ConnectProfiles';
+import ImageManager from 'manage/image/ImageManager';
+import ProfileManager from 'manage/storage/ConnectProfiles';
 import UserImageComponent from '../../../component/image/UserImage';
 import { Route } from 'react-router-dom';
 import CreateImageMenu from './images/Create';
@@ -8,6 +8,17 @@ import EditImageMenu from './images/Edit';
 import './Images.css';
 
 export default class ImageMenu extends Component {
+
+    render() {
+        return (<Fragment>
+            <Route path={this.props.match.path} exact render={props => <Overview {...props} />} />
+            <Route path={this.props.match.path + "/create"} render={props => <CreateImageMenu {...props} />} />
+            <Route path={this.props.match.path + "/edit/:imageID"} render={props => <EditImageMenu {...props} />} />
+        </Fragment>);
+    }
+}
+
+class Overview extends Component {
 
     constructor(props) {
         super(props);
@@ -54,21 +65,27 @@ export default class ImageMenu extends Component {
         this.props.history.push(this.props.match.url + "/create");
     }
 
-    render() {
+    renderSelected() {
+        if (this.state.selectedImage !== null) {
+            return <Fragment>
+                Image ID: {this.state.selectedImage.getID()} <br />
+                {this.state.selectedMeta && this.state.selectedMeta.isVisible() && this.renderSelectedMeta()}
+            </Fragment>
+        } else {
+            return "No image selected";
+        }
+    }
+
+    renderSelectedMeta() {
+        const meta = this.state.selectedMeta;
         return (<Fragment>
-            <Route path={this.props.match.path} exact render={() => {
-                return (<Fragment>
-                    <div className="Images-Collection">
-                        {this.renderImages()}
-                    </div>
-                    <div className="Images-Right-Bar">
-                        {this.renderSelected()}
-                        <button className="Images-New-Button" onClick={this.toCreateImageMenu}>Upload image</button>
-                    </div>
-                </Fragment>);
-            }} />
-            <Route path={this.props.match.path + "/create"} render={props => <CreateImageMenu {...props} />} />
-            <Route path={this.props.match.path + "/edit/:imageID"} render={props => <EditImageMenu {...props} />} />
+            {meta.name} <br />
+            {meta.isPrivate ? 'private' : 'public'} <br />
+            Last modified at {this.formatTime(meta.lastModified)} <br />
+            Created at {this.formatTime(meta.createdAt)} <br />
+            <button className="Images-Edit-Button" onClick={() => {
+                this.props.history.push(this.props.match.url + '/edit/' + this.state.selectedImage.getID());
+            }} >Edit</button> <br />
         </Fragment>);
     }
 
@@ -115,30 +132,6 @@ export default class ImageMenu extends Component {
         }
     }
 
-    renderSelected() {
-        if (this.state.selectedImage !== null) {
-            return <Fragment>
-                Image ID: {this.state.selectedImage.getID()} <br />
-                {this.state.selectedMeta && this.state.selectedMeta.isVisible() && this.renderSelectedMeta()}
-            </Fragment>
-        } else {
-            return "No image selected";
-        }
-    }
-
-    renderSelectedMeta() {
-        const meta = this.state.selectedMeta;
-        return (<Fragment>
-            {meta.name} <br />
-            {meta.isPrivate ? 'private' : 'public'} <br />
-            Last modified at {this.formatTime(meta.lastModified)} <br />
-            Created at {this.formatTime(meta.createdAt)} <br />
-            <button className="Images-Edit-Button" onClick={() => {
-                this.props.history.push(this.props.match.url + '/edit/' + this.state.selectedImage.getID());
-            }} >Edit</button> <br />
-        </Fragment>);
-    }
-
     formatTime(millis) {
         const date = new Date(millis);
         return this.ensureLength(date.getDate()) + '/' + this.ensureLength(date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + this.ensureLength(date.getHours()) + ':' + this.ensureLength(date.getMinutes());
@@ -150,5 +143,17 @@ export default class ImageMenu extends Component {
             asString = '0' + asString;
         }
         return asString;
+    }
+
+    render(){
+        return (<Fragment>
+            <div className="Images-Collection">
+                {this.renderImages()}
+            </div>
+            <div className="Images-Right-Bar">
+                {this.renderSelected()}
+                <button className="Images-New-Button" onClick={this.toCreateImageMenu}>Upload image</button>
+            </div>
+        </Fragment>);
     }
 }

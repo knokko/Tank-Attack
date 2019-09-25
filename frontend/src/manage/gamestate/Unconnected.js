@@ -1,5 +1,5 @@
-import Menu from '../../show/menu/Unconnected';
-import ConnectingMenu from '../../show/menu/Connecting';
+import Menu from 'show/menu/Unconnected';
+import ConnectingMenu from 'show/menu/Connecting';
 import ConnectProfileManager from '../storage/ConnectProfiles';
 import ConnectionManager from '../connection/Manager';
 import React from 'react';

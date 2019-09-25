@@ -8,7 +8,7 @@ import ProfileManager from '../storage/ConnectProfiles';
  */
 class ImageManager {
 
-    constructor(){
+    constructor() {
         this.imageMap = new Map();
         this.usersMap = new Map();
         this.userImageListenMap = new Map();
@@ -23,7 +23,7 @@ class ImageManager {
      * @param {boolean} isPrivate Whether or not the image is private
      * @param {number} createdAt The time the image was created at, as returned by the backend
      */
-    registerUploadedImage(imageID, imageCanvas, name, isPrivate, createdAt){
+    registerUploadedImage(imageID, imageCanvas, name, isPrivate, createdAt) {
         const userImageState = new ResourceState(null, null);
         const userImage = new UserImage(imageCanvas, imageID);
         userImage.meta = new MetaData(name, isPrivate, true, createdAt, createdAt);
@@ -38,8 +38,8 @@ class ImageManager {
      * @param {number} ownerID The user id of the owner of the uploaded image
      * @param {number} newImageID The image id of the uploaded image
      */
-    notifyImageUpload(ownerID, newImageID){
-        if (this.shouldFollowUserImageIDs(ownerID)){
+    notifyImageUpload(ownerID, newImageID) {
+        if (this.shouldFollowUserImageIDs(ownerID)) {
             this.addUserImageID(ownerID, newImageID);
         }
     }
@@ -49,10 +49,17 @@ class ImageManager {
      * @param {number} userID 
      * @param {number} newImageID 
      */
-    addUserImageID(userID, newImageID){
-        const imageIDs = this.usersMap.get(userID).resource;
-        imageIDs.push(newImageID);
-        this.userImageListenMap.get(userID).notifyListeners(imageIDs);
+    addUserImageID(userID, newImageID) {
+        const userImagesState = this.usersMap.get(userID);
+
+        // If we already have our image IDs, we just add it to the list rather than fetching from the backend
+        if (userImagesState !== undefined){
+            const imageIDs = userImagesState.resource;
+            imageIDs.push(newImageID);
+            this.userImageListenMap.get(userID).notifyListeners(imageIDs);
+        }
+
+        // If it was undefined, we will ge the new image ID along with the rest of the image IDs from the backend
     }
 
     /**
@@ -68,9 +75,12 @@ class ImageManager {
      * @param {Function} onLoad The function to be called once the UserImage has been loaded. It should take a
      * single parameter of type UserImage.
      */
-    getUserImage(imageID, listener, onLoad){
+    getUserImage(imageID, listener, onLoad) {
+        if (typeof imageID !== 'number'){
+            throw new Error("Invalid type for imageID");
+        }
         let userImageState = this.imageMap.get(imageID);
-        if (userImageState === undefined){
+        if (userImageState === undefined) {
             userImageState = new ResourceState(listener, onLoad);
             this.imageMap.set(imageID, userImageState);
             requestImage(imageID, (pixelData, width, height) => {
@@ -92,7 +102,7 @@ class ImageManager {
      * @param {Object} listener The entity that requested the user image, must be the same
      * as the one used for getUserImage.
      */
-    cancelGetUserImage(imageID, listener){
+    cancelGetUserImage(imageID, listener) {
         const userImageState = this.imageMap.get(imageID);
         userImageState.removeCallback(listener);
     }
@@ -101,24 +111,41 @@ class ImageManager {
      * Notifies the image manager that someone has changed the image with the given id. The image manager
      * will make sure that eventual image listeners will get notified of the change.
      * @param {number} imageID the image id of the changed image
+     * @param {HtmlCanvasElement} newCanvas The new canvas containing the image pixels, or null if the pixels
+     * need to be fetched from the server.
+     * @param {number} newLastModified The new last modified time of the image. This parameter should only be
+     * supplied if newCanvas is not null.
      */
-    notifyImageChange(imageID){
+    notifyImageChange(imageID, newCanvas = null, newLastModified = 0) {
         const userImageState = this.imageMap.get(imageID);
-        if (userImageState !== undefined){
+        if (userImageState !== undefined) {
             const userImage = userImageState.resource;
-            if (userImage !== null){
-                requestImage(imageID, (pixelData, width, height) => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    const imageData = new ImageData(width, height);
-                    for (let index = 0; index < pixelData.length; index++){
-                        imageData.data[index] = pixelData[index];
+            if (userImage !== null) {
+                if (newCanvas !== null) {
+                    userImage.changeImage(newCanvas);
+                    const meta = userImage.meta;
+                    if (meta !== null) {
+                        userImage.changeMeta(new MetaData(meta.name, meta.isPrivate, meta.exists, newLastModified, meta.createdAt));
                     }
-                    ctx.putImageData(imageData, width, height);
-                    userImage.changeImage(canvas);
-                });
+                } else {
+                    requestImage(imageID, (pixelData, width, height) => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        const imageData = new ImageData(width, height);
+                        for (let index = 0; index < pixelData.length; index++) {
+                            imageData.data[index] = pixelData[index];
+                        }
+                        ctx.putImageData(imageData, width, height);
+                        userImage.changeImage(canvas);
+                    });
+                    if (userImage.meta !== null) {
+                        requestImageMetaData(imageID, newMeta => {
+                            userImage.changeMeta(newMeta);
+                        });
+                    }
+                }
             }
         }
     }
@@ -127,16 +154,21 @@ class ImageManager {
      * Notifies the image manager that the metadata of the image with the given id has changed.
      * The image manager will make sure that eventual listeners of the image metadata will be notified.
      * @param {number} imageID The image id of the image whose metadata changed
+     * @param {MetaData} newMeta The new metadata of the image, or null if the new value should be requested from the server
      */
-    notifyImageMetaChange(imageID){
+    notifyImageMetaChange(imageID, newMeta = null) {
         const userImageState = this.imageMap.get(imageID);
-        if (userImageState !== undefined){
+        if (userImageState !== undefined) {
             const userImage = userImageState.resource;
-            if (userImage !== null){
-                if (userImage.meta !== null){
-                    requestImageMetaData(imageID, newMeta => {
+            if (userImage !== null) {
+                if (userImage.meta !== null) {
+                    if (newMeta !== null) {
                         userImage.changeMeta(newMeta);
-                    });
+                    } else {
+                        requestImageMetaData(imageID, newMeta => {
+                            userImage.changeMeta(newMeta);
+                        });
+                    }
                 }
             }
         }
@@ -152,9 +184,9 @@ class ImageManager {
      * @param {Function} callback The function to be called when the image ids have been obtained. It should
      * take a single parameter that is an array of numbers
      */
-    getImageIDS(userID, listener, callback){
+    getImageIDS(userID, listener, callback) {
         let idsState = this.usersMap.get(userID);
-        if (idsState === undefined){
+        if (idsState === undefined) {
             idsState = new ResourceState(listener, callback);
             this.usersMap.set(userID, idsState);
             this.userImageListenMap.set(userID, new ChangeListeners());
@@ -172,19 +204,19 @@ class ImageManager {
      * it that the image ids of the given user with the given userID have changed.
      * @param {number} userID The id of the user
      */
-    shouldFollowUserImageIDs(userID){
+    shouldFollowUserImageIDs(userID) {
         return this.userImageListenMap.has(userID);
     }
 
-    updateUserImageIDs(userID, newImageIDs){
+    updateUserImageIDs(userID, newImageIDs) {
         this.userImageListenMap.get(userID).notifyListeners(newImageIDs);
     }
 
-    listenUserImageIDs(userID, listener, onChange){
+    listenUserImageIDs(userID, listener, onChange) {
         this.userImageListenMap.get(userID).addListener(listener, onChange);
     }
 
-    stopListenUserImageIDs(userID, listener){
+    stopListenUserImageIDs(userID, listener) {
         this.userImageListenMap.get(userID).removeListener(listener);
     }
 
@@ -195,7 +227,7 @@ class ImageManager {
      * @param {Object} listener The entity that requested the image ids, must be the same
      * as the one used for getImageIDs.
      */
-    cancelGetImageIDs(userID, listener){
+    cancelGetImageIDs(userID, listener) {
         const idsState = this.usersMap.get(userID);
         idsState.removeCallback(listener);
     }
@@ -211,33 +243,33 @@ export default Instance;
 
 class ResourceState {
 
-    constructor(firstListener, firstCallback){
+    constructor(firstListener, firstCallback) {
         this.resource = null;
         this.callbackPairs = [new ListenerPair(firstListener, firstCallback)];
     }
 
-    setResource(resource){
+    setResource(resource) {
         this.resource = resource;
-        for (let index = 0; index < this.callbackPairs.length; index++){
+        for (let index = 0; index < this.callbackPairs.length; index++) {
             this.callbackPairs[index].callback(resource);
         }
         this.callbackPairs = null;
     }
 
-    addCallback(listener, callback){
-        if (this.callbackPairs === null){
+    addCallback(listener, callback) {
+        if (this.callbackPairs === null) {
             callback(this.resource);
         } else {
             this.callbackPairs.push(new ListenerPair(listener, callback));
         }
     }
 
-    removeCallback(listener){
-        if (this.callbackPairs !== null){
+    removeCallback(listener) {
+        if (this.callbackPairs !== null) {
             const callbacks = this.callbackPairs;
             let length = callbacks.length;
-            for (let index = 0; index < length; index++){
-                if (callbacks[index].listener === listener){
+            for (let index = 0; index < length; index++) {
+                if (callbacks[index].listener === listener) {
                     callbacks.splice(index, 1);
                     index--;
                     length--;
@@ -249,32 +281,27 @@ class ResourceState {
 
 class ChangeListeners {
 
-    constructor(){
+    constructor() {
         this.pairs = [];
     }
 
-    notifyListeners(newValue){
+    notifyListeners(newValue) {
         const pairs = this.pairs;
         const length = pairs.length;
-        for (let index = 0; index < length; index++){
+        for (let index = 0; index < length; index++) {
             pairs[index].callback(newValue);
         }
     }
 
-    addListener(listener, onChange){
-        console.log('pairs are', this.pairs);
+    addListener(listener, onChange) {
         this.pairs.push(new ListenerPair(listener, onChange));
-        console.log('pairs became', this.pairs);
     }
 
-    removeListener(listener){
+    removeListener(listener) {
         const pairs = this.pairs;
         let length = pairs.length;
-        console.log('pairs are now', pairs);
-        console.log('length is', length);
-        for (let index = 0; index < length; index++){
-            console.log('index is ' + index + ' and length is ' + index);
-            if (pairs[index].listener === listener){
+        for (let index = 0; index < length; index++) {
+            if (pairs[index].listener === listener) {
                 pairs.splice(index, 1);
                 index--;
                 length--;
@@ -285,7 +312,7 @@ class ChangeListeners {
 
 class ListenerPair {
 
-    constructor(listener, callback){
+    constructor(listener, callback) {
         this.listener = listener;
         this.callback = callback;
     }

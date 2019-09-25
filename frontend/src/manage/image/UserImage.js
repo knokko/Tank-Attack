@@ -1,7 +1,7 @@
 import { requestImageMetaData } from '../connection/sending/Image';
-import deletedImageURL from '../../show/images/deleted.png';
-import ioErrorImageURL from '../../show/images/io_error.png';
-import privateImageURL from '../../show/images/private.png';
+import deletedImageURL from 'show/images/deleted.png';
+import ioErrorImageURL from 'show/images/io_error.png';
+import privateImageURL from 'show/images/private.png';
 
 /**
  * Represents a user-created image. Please do not access the properties of instances of this call directly, but only call its methods.
@@ -58,7 +58,10 @@ export default class UserImage {
      */
     draw(canvas, offsetX = 0, offsetY = 0, width = canvas.width, height = canvas.height){
         const ctx = canvas.getContext('2d');
+        const oldSmoothing = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;
         ctx.drawImage(this.image, offsetX, offsetY, width, height);
+        ctx.imageSmoothingEnabled = oldSmoothing;
     }
 
     addChangeListener(listener, onChange){
@@ -181,7 +184,8 @@ export function createImage(id, pixelData, width, height, onReady){
 export class MetaData {
 
     /**
-     * Constructs a new MetaData instance. This constructor should only be called from the requestImageMetaData function!
+     * Constructs a new MetaData instance. This constructor should only be called from the requestImageMetaData function
+     * or from the image manager!
      * @param {string} name 
      * @param {boolean} isPrivate
      * @param {boolean} exists 

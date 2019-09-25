@@ -78,10 +78,11 @@ pub mod change_pixels {
 
     use bit_helper::output::{BitOutput, U8VecBitOutput};
 
-    pub fn send_success(socket: Arc<ws::Sender>) -> Result<(), ws::Error> {
-        let mut output = U8VecBitOutput::with_capacity(1);
+    pub fn send_success(socket: Arc<ws::Sender>, new_last_modified: u64) -> Result<(), ws::Error> {
+        let mut output = U8VecBitOutput::with_capacity(8);
         output.add_bool(true);
         output.add_sized_u64(change_pixels::SUCCESS as u64, change_pixels::CODE_BITS);
+        output.add_var_u64(new_last_modified);
         send(socket, output.vector)
     }
 

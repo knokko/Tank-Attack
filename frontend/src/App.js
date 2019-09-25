@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import StateUnconnected from './manage/gamestate/Unconnected';
-import StateMenu from './manage/gamestate/Menu';
-import ConnectionManager from './manage/connection/Manager';
-import ProfileManager from './manage/storage/ConnectProfiles';
+import StateUnconnected from 'manage/gamestate/Unconnected';
+import StateMenu from 'manage/gamestate/Menu';
+import ConnectionManager from 'manage/connection/Manager';
+import ProfileManager from 'manage/storage/ConnectProfiles';
 import {BrowserRouter as Router, Route } from 'react-router-dom';
 
 class App extends Component {

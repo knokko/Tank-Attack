@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import ImageManager from '../../../manage/image/ImageManager';
+import ImageManager from 'manage/image/ImageManager';
 import './UserImage.css';
 
 export default class UserImage extends Component {
@@ -21,14 +21,8 @@ export default class UserImage extends Component {
     componentDidMount(){
         ImageManager.getUserImage(this.props.imageID, this, userImage => {
             this.userImage = userImage;
-            this.canvasRef.current.width = userImage.getWidth();
-            this.canvasRef.current.height = userImage.getHeight();
-            this.userImage.draw(this.canvasRef.current);
             this.forceUpdate();
-            this.userImage.addChangeListener(this, userImage => {
-                this.canvasRef.current.width = userImage.getWidth();
-                this.canvasRef.current.height = userImage.getHeight();
-                userImage.draw(this.canvasRef.current);
+            this.userImage.addChangeListener(this, _ => {
                 this.forceUpdate();
             });
         });
@@ -36,6 +30,12 @@ export default class UserImage extends Component {
             this.forceUpdate();
         };
         window.addEventListener('resize', this.resizeCallback);
+    }
+
+    componentDidUpdate(){
+        if (this.userImage !== null){
+            this.userImage.draw(this.canvasRef.current);
+        }
     }
 
     componentWillUnmount(){
@@ -65,11 +65,13 @@ export default class UserImage extends Component {
                 className="UserImageCanvas" 
                 ref={this.canvasRef}
                 onClick={this.handleClick}
+                width={width}
+                height={height}
                 style={
                     { position: 'absolute', 
                     left: this.props.x * window.innerWidth / 100 + (maxWidth - width) / 2, 
                     top: this.props.y * window.innerHeight / 100 + (maxHeight - height) / 2, 
-                    width: width, height: height, borderColor: this.props.selected ? 'blue' : 'white'}
+                    borderColor: this.props.selected ? 'blue' : 'white'}
                 }
             />
         );

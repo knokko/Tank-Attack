@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import ImageManager from '../../../../../manage/image/ImageManager';
+import ImageManager from 'manage/image/ImageManager';
 import './Edit.css';
-import { changeImageMeta, changeImagePixels } from '../../../../../manage/connection/sending/Image';
+import { changeImageMeta, changeImagePixels } from 'manage/connection/sending/Image';
+import { MetaData } from 'manage/image/UserImage';
 
 export default class EditImage extends Component {
 
@@ -14,7 +15,8 @@ export default class EditImage extends Component {
         // meta is part of state because it is important for the render method
         this.state = {
             meta: null,
-            saving: false
+            error: null,
+            info: null
         };
 
         this.nameRef = React.createRef();
@@ -22,8 +24,20 @@ export default class EditImage extends Component {
         this.privateRef = React.createRef();
     }
 
+    setError(errorMessage) {
+        this.setState({ error: errorMessage, info: null });
+    }
+
+    setInfo(infoMessage) {
+        this.setState({ info: infoMessage, error: null });
+    }
+
+    getImageID(){
+        return parseInt(this.props.match.params.imageID);
+    }
+
     componentDidMount() {
-        ImageManager.getUserImage(this.props.match.params.imageID, this, image => {
+        ImageManager.getUserImage(this.getImageID(), this, image => {
             this.image = image;
             image.getMetaData(this, meta => {
                 this.setState({ meta: meta });
@@ -33,7 +47,7 @@ export default class EditImage extends Component {
 
     componentWillUnmount() {
         if (this.image === null) {
-            ImageManager.cancelGetUserImage(this.props.match.params.imageID, this);
+            ImageManager.cancelGetUserImage(this.getImageID(), this);
         } else if (this.state.meta === null) {
             this.image.cancelGetMetaData(this);
         }
@@ -49,21 +63,20 @@ export default class EditImage extends Component {
             return "Loading...";
         } else if (!this.state.meta.isVisible()) {
             return "You do not have access to this image";
-        } else if (this.state.saving) {
-            return "Saving changes...";
         } else {
             return (<div className="Image-Edit-Body">
-                <button className="Image-Edit-Back-Button" onClick={() => {
+                {this.state.error && <div className="Image-Edit-Error">{this.state.error}</div>}
+                {this.state.info && <div className="Image-Edit-Info">{this.state.info} </div>}
+                <button className="Image-Edit-Back" onClick={() => {
                     this.goBack();
                 }}>Cancel</button>
-                <div className="Edit-Image-Name-Label">Name:</div>
-                <input type="text" ref={this.nameRef} className="Edit-Image-Name-Input" defaultValue={this.state.meta.name} />
-                <div className="Edit-Image-Private-Label">Private</div>
-                <input type="checkbox" ref={this.privateRef} className="Edit-Image-Private-Input" defaultChecked={this.state.meta.isPrivate} />
-                <div className="Edit-Image-File-Label">Change image:</div>
-                <input type="file" ref={this.fileRef} className="Edit-Image-File-Input" />
-                <button className="Image-Edit-Save-Button" onClick={() => {
-                    this.setState({ saving: true });
+                <div className="Image-Edit-Name-Label">Name:</div>
+                <input type="text" ref={this.nameRef} className="Image-Edit-Name-Input" defaultValue={this.state.meta.name} />
+                <div className="Image-Edit-Private-Label">Private</div>
+                <input type="checkbox" ref={this.privateRef} className="Image-Edit-Private-Input" defaultChecked={this.state.meta.isPrivate} />
+                <div className="Image-Edit-Image-Label">Change image:</div>
+                <input type="file" ref={this.fileRef} className="Image-Edit-File-Input" style={{left: '45vw'}}/>
+                <button className="Image-Edit-Save" onClick={() => {
 
                     const newName = this.nameRef.current.value;
                     const newPrivate = this.privateRef.current.checked;
@@ -72,30 +85,35 @@ export default class EditImage extends Component {
 
                     let metaResult = undefined;
                     let pixelsResult = undefined;
-                    const imageID = this.props.match.params.imageID;
+                    const imageID = this.getImageID();
+
+                    if (changeMeta || newImage){
+                        this.setInfo('Saving changes...');
+                    } else {
+                        this.setInfo('There are no changes');
+                    }
 
                     if (changeMeta) {
                         changeImageMeta(imageID, newName, newPrivate, () => {
+                            ImageManager.notifyImageMetaChange(imageID, new MetaData(newName, newPrivate, true, this.state.meta.lastModified, this.state.meta.createdAt));
                             if (newImage) {
                                 if (pixelsResult) {
                                     this.goBack();
                                 } else if (pixelsResult === undefined) {
                                     metaResult = true;
-                                } else {
-                                    this.setState({ saving: false });
                                 }
                             } else {
                                 this.goBack();
                             }
                         }, reason => {
                             metaResult = false;
-                            window.alert(reason);
+                            this.setError(reason);
                         });
                     }
                     if (newImage) {
                         const onFail = reason => {
                             pixelsResult = false;
-                            window.alert(reason);
+                            this.setError(reason);
                         };
 
                         const image = new Image();
@@ -111,14 +129,13 @@ export default class EditImage extends Component {
                                     const ctx = imageCanvas.getContext('2d');
                                     ctx.drawImage(image, 0, 0);
 
-                                    changeImagePixels(imageID, imageCanvas, () => {
+                                    changeImagePixels(imageID, imageCanvas, newLastModified => {
+                                        ImageManager.notifyImageChange(imageID, imageCanvas, newLastModified);
                                         if (changeMeta) {
                                             if (metaResult) {
                                                 this.goBack();
                                             } else if (metaResult === undefined) {
                                                 pixelsResult = true;
-                                            } else {
-                                                this.setState({ saving: false });
                                             }
                                         } else {
                                             this.goBack();

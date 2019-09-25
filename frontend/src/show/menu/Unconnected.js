@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import Manager, { PASSWORD_LENGTH } from '../../manage/storage/ConnectProfiles';
+import Manager, { PASSWORD_LENGTH } from 'manage/storage/ConnectProfiles';
 import DynamicStringInput from '../component/input/DynamicString';
 import DynamicIntInput from '../component/input/DynamicInt';
 import './Unconnected.css';

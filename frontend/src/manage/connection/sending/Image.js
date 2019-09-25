@@ -52,7 +52,6 @@ import ImageManager from '../../image/ImageManager';
 import { MetaData, DeletedImageCanvas, IOErrorImageCanvas, PrivateImageCanvas } from '../../image/UserImage';
 
 export function requestImage(imageID, onSuccess, onFail){
-    console.log('request image ' + imageID);
     const output = ConnectionManager.createOutput(CODE_IMAGE, input => {
         const responseCode = input.readNumber(GET_PIXELS_BIT_COUNT, false);
         if (responseCode === GET_PIXELS_SUCCESS){
@@ -102,7 +101,6 @@ export function requestImageMetaData(imageID, callback){
 }
 
 export function requestImageIDs(userID, callback){
-    console.log('request image ids of ' + userID);
     const output = ConnectionManager.createOutput(CODE_IMAGE, input => {
         const responseCode = input.readNumber(IDS_BITCOUNT, false);
         if (responseCode === IDS_SUCCESS){
@@ -111,8 +109,6 @@ export function requestImageIDs(userID, callback){
             for (let index = 0; index < amount; index++){
                 ids[index] = input.readVarUint();
             }
-            console.log('image ids of user ' + userID + ' are ');
-            console.log(ids);
             callback(ids);
         } else if (responseCode === IDS_NO_ACCOUNT){
             callback(null);
@@ -179,6 +175,16 @@ export function uploadImage(canvas, name, isPrivate, onSuccess, onFail){
     output.terminate();
 }
 
+/**
+ * Requests the server to change the metadata of the image with the given imageID.
+ * @param {number} imageID The id of the image whose meta should be changed
+ * @param {string} newName The (new) name of the image
+ * @param {boolean} newPrivate The (new) private flag of the image
+ * @param {Function} onSuccess The function to be called when the request succeeds. It should not
+ * take any parameters.
+ * @param {Function} onFail The function to be called when the request fails. It should take a
+ * single parameter of type string that will be the reason that the request failed.
+ */
 export function changeImageMeta(imageID, newName, newPrivate, onSuccess, onFail){
     const output = ConnectionManager.createOutput(CODE_IMAGE, input => {
         const responseCode = input.readNumber(CHANGE_META_BITCOUNT, false);
@@ -199,11 +205,20 @@ export function changeImageMeta(imageID, newName, newPrivate, onSuccess, onFail)
     output.terminate();
 }
 
+/**
+ * Requests the server to change the pixel data of the image with the given id.
+ * @param {number} imageID The id of the image to change
+ * @param {HtmlCanvasElement} canvas A canvas containing the new pixels of the image to change
+ * @param {Function} onSuccess The function to be called when the request succeeds. It should
+ * take a single parameter of type number that will be the new value of lastModified of the image.
+ * @param {Function} onFail The function to be called when the request fails. It should take a
+ * single parameter of type string that will be the reason the request failed.
+ */
 export function changeImagePixels(imageID, canvas, onSuccess, onFail){
     const output = ConnectionManager.createOutput(CODE_IMAGE, input => {
         const responseCode = input.readNumber(CHANGE_PIXELS_CODE_BITS, false);
         if (responseCode === CHANGE_PIXELS_SUCCESS){
-            onSuccess();
+            onSuccess(input.readVarUint());
         } else if (responseCode === CHANGE_PIXELS_IO_ERROR){
             onFail('The server is having IO trouble');
         } else if (responseCode === CHANGE_PIXELS_UNAUTHORIZED){

@@ -1,13 +1,4 @@
 .UserImageCanvas {
-    /* Ripped from https://stackoverflow.com/questions/14068103/disable-antialising-when-scaling-images?noredirect=1&lq=1 */
-    /* Why is there no proper support for this -_- */
-    image-rendering: optimizeSpeed;             /* STOP SMOOTHING, GIVE ME SPEED  */
-    image-rendering: -moz-crisp-edges;          /* Firefox                        */
-    image-rendering: -o-crisp-edges;            /* Opera                          */
-    image-rendering: -webkit-optimize-contrast; /* Chrome (and eventually Safari) */
-    image-rendering: pixelated; /* Chrome */
-    image-rendering: optimize-contrast;         /* CSS3 Proposed                  */
-    -ms-interpolation-mode: nearest-neighbor;   /* IE8+                           */
 
     border-left-width: 5vw;
     border-top-width: 5vh;

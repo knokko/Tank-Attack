@@ -9,6 +9,7 @@ The new pixel data (as uint8 sequence of size 4 * width * height)
 The server will send the following response:
 true (as boolean)
 SUCCESS or IO_ERROR or UNAUTHORIZED or NO_IMAGE (as sized uint of size IMAGE_CHANGE_CODE_BITS)
+if SUCCESS, the new last modified of the image (as var uint)
 
 Additionally, the server will broadcast the following message to all currently connected clients:
 false (as boolean)
